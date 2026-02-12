@@ -125,14 +125,24 @@ export class InstagramChannel implements Channel {
       }
     });
 
+    // Log ALL incoming requests for debugging
+    this.app.use((req, _res, next) => {
+      console.log(`  [Instagram] ${req.method} ${req.url}`);
+      next();
+    });
+
     // Incoming messages from Instagram DMs
     this.app.post("/webhook", async (req, res) => {
       // Always respond 200 quickly to acknowledge receipt
       res.sendStatus(200);
 
       const body = req.body;
+      console.log("  [Instagram] Webhook payload:", JSON.stringify(body, null, 2));
 
-      if (body.object !== "instagram") return;
+      if (body.object !== "instagram") {
+        console.log(`  [Instagram] Ignored — object is "${body.object}", not "instagram"`);
+        return;
+      }
 
       for (const entry of body.entry || []) {
         for (const event of entry.messaging || []) {
