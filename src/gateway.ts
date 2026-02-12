@@ -2,7 +2,6 @@ import "dotenv/config";
 import { ForeverYoursAgent } from "./core/agent.js";
 import { allSkills } from "./skills/index.js";
 import { DiscordChannel } from "./channels/discord.js";
-import { InstagramChannel } from "./channels/instagram.js";
 import { WebChatChannel } from "./channels/webchat.js";
 import { Channel } from "./channels/types.js";
 
@@ -35,29 +34,6 @@ async function startGateway() {
   const webChatPort = parseInt(process.env.WEBCHAT_PORT || "3000");
   const webChat = new WebChatChannel(webChatPort);
   channels.push(webChat);
-
-  // Instagram DMs (if access token provided) — connect first so Discord errors don't block it
-  if (process.env.INSTAGRAM_ACCESS_TOKEN) {
-    const igPort = parseInt(process.env.INSTAGRAM_WEBHOOK_PORT || "8585");
-    const allowedIds = process.env.ALLOWED_INSTAGRAM_IDS
-      ? process.env.ALLOWED_INSTAGRAM_IDS.split(",").map((id) => id.trim())
-      : undefined;
-    const instagram = new InstagramChannel({
-      accessToken: process.env.INSTAGRAM_ACCESS_TOKEN,
-      verifyToken: process.env.INSTAGRAM_VERIFY_TOKEN || "forever-yours-verify",
-      port: igPort,
-      allowedUserIds: allowedIds,
-      webhookUrl: process.env.INSTAGRAM_WEBHOOK_URL,
-      appId: process.env.FACEBOOK_APP_ID,
-      appSecret: process.env.FACEBOOK_APP_SECRET,
-      pageId: process.env.FACEBOOK_PAGE_ID,
-    });
-    channels.push(instagram);
-  } else {
-    console.log(
-      "  [Instagram] Skipped — set INSTAGRAM_ACCESS_TOKEN in .env to enable"
-    );
-  }
 
   // Discord (if token provided)
   if (process.env.DISCORD_BOT_TOKEN) {

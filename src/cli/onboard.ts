@@ -45,26 +45,7 @@ async function onboard() {
     if (guildId) envLines.push(`DISCORD_GUILD_ID=${guildId}`);
   }
 
-  console.log("\n  Step 3: Instagram DMs (optional)");
-  console.log("  Set up at https://developers.facebook.com\n");
-  const igToken = await ask(
-    rl,
-    "  Instagram Page Access Token (press Enter to skip): "
-  );
-  if (igToken) {
-    envLines.push(`INSTAGRAM_ACCESS_TOKEN=${igToken}`);
-    const igVerify = await ask(
-      rl,
-      "  Webhook Verify Token (default: forever-yours-verify): "
-    );
-    envLines.push(
-      `INSTAGRAM_VERIFY_TOKEN=${igVerify || "forever-yours-verify"}`
-    );
-    const igPort = await ask(rl, "  Instagram webhook port (default 8585): ");
-    envLines.push(`INSTAGRAM_WEBHOOK_PORT=${igPort || "8585"}`);
-  }
-
-  console.log("\n  Step 4: Ports");
+  console.log("\n  Step 3: Ports");
   const webPort = await ask(rl, "  WebChat port (default 3000): ");
   envLines.push(`WEBCHAT_PORT=${webPort || "3000"}`);
 
