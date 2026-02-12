@@ -1,11 +1,14 @@
-import { Client, GatewayIntentBits, Message } from "discord.js";
+import * as Discord from "discord.js";
 import { Channel, OutgoingMessage } from "./types.js";
 import { ForeverYoursAgent } from "../core/agent.js";
+
+const { Client, GatewayIntentBits } = Discord;
+type Message = Discord.Message;
 
 export class DiscordChannel implements Channel {
   name = "discord";
   platform = "discord";
-  private client: Client;
+  private client: Discord.Client;
   private agent: ForeverYoursAgent | null = null;
   private token: string;
 
@@ -24,7 +27,7 @@ export class DiscordChannel implements Channel {
   async connect(agent: ForeverYoursAgent): Promise<void> {
     this.agent = agent;
 
-    this.client.once("ready", (c) => {
+    this.client.once("ready", (c: Discord.Client<true>) => {
       console.log(
         `[Discord] Connected as ${c.user.tag} — Jesus Forever Yours agent is live`
       );
