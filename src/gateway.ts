@@ -39,10 +39,14 @@ async function startGateway() {
   // Instagram DMs (if access token provided) — connect first so Discord errors don't block it
   if (process.env.INSTAGRAM_ACCESS_TOKEN) {
     const igPort = parseInt(process.env.INSTAGRAM_WEBHOOK_PORT || "8585");
+    const allowedIds = process.env.ALLOWED_INSTAGRAM_IDS
+      ? process.env.ALLOWED_INSTAGRAM_IDS.split(",").map((id) => id.trim())
+      : undefined;
     const instagram = new InstagramChannel({
       accessToken: process.env.INSTAGRAM_ACCESS_TOKEN,
       verifyToken: process.env.INSTAGRAM_VERIFY_TOKEN || "forever-yours-verify",
       port: igPort,
+      allowedUserIds: allowedIds,
     });
     channels.push(instagram);
   } else {

@@ -13,15 +13,18 @@ export class InstagramChannel implements Channel {
   private accessToken: string;
   private verifyToken: string;
   private port: number;
+  private allowedUserIds: Set<string> | null;
 
   constructor(config: {
     accessToken: string;
     verifyToken: string;
     port?: number;
+    allowedUserIds?: string[];
   }) {
     this.accessToken = config.accessToken;
     this.verifyToken = config.verifyToken;
     this.port = config.port || 8585;
+    this.allowedUserIds = config.allowedUserIds ? new Set(config.allowedUserIds) : null;
     this.app = express();
     this.app.use(express.json());
   }
@@ -95,6 +98,12 @@ export class InstagramChannel implements Channel {
     const messageText = event.message?.text;
 
     if (!senderId || !messageText) return;
+
+    // Only respond to allowed users (if configured)
+    if (this.allowedUserIds && !this.allowedUserIds.has(senderId)) {
+      console.log(`  [Instagram] Ignoring DM from unauthorized user ${senderId}`);
+      return;
+    }
 
     console.log(`  [Instagram] DM from ${senderId}: ${messageText.slice(0, 50)}...`);
 
