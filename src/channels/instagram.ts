@@ -102,6 +102,39 @@ export class InstagramChannel implements Channel {
         `  [Instagram] Current subscriptions:`,
         JSON.stringify(checkData, null, 2)
       );
+
+      // Subscribe the Instagram account to receive webhook events
+      // First, get the Instagram account's connected Page ID
+      try {
+        const meRes = await fetch(
+          `${GRAPH_API_BASE}/me?fields=id,name&access_token=${this.accessToken}`
+        );
+        const meData = await meRes.json() as any;
+        console.log(`  [Instagram] Connected account:`, JSON.stringify(meData));
+
+        if (meData.id) {
+          // Subscribe the page to the app's webhooks
+          const subRes = await fetch(
+            `${GRAPH_API_BASE}/${meData.id}/subscribed_apps`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                subscribed_fields: "messages",
+                access_token: this.accessToken,
+              }),
+            }
+          );
+          const subData = await subRes.json();
+          if (subRes.ok) {
+            console.log(`  [Instagram] Page ${meData.id} subscribed to webhook events`);
+          } else {
+            console.error(`  [Instagram] Page subscription failed:`, JSON.stringify(subData));
+          }
+        }
+      } catch (subError) {
+        console.error("  [Instagram] Page subscription error:", subError);
+      }
     } catch (error) {
       console.error("  [Instagram] Webhook registration error:", error);
     }
