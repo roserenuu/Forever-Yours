@@ -17,6 +17,7 @@ export class InstagramChannel implements Channel {
   private webhookUrl: string | null;
   private appId: string | null;
   private appSecret: string | null;
+  private pageId: string | null;
 
   constructor(config: {
     accessToken: string;
@@ -26,6 +27,7 @@ export class InstagramChannel implements Channel {
     webhookUrl?: string;
     appId?: string;
     appSecret?: string;
+    pageId?: string;
   }) {
     this.accessToken = config.accessToken;
     this.verifyToken = config.verifyToken;
@@ -34,6 +36,7 @@ export class InstagramChannel implements Channel {
     this.webhookUrl = config.webhookUrl || null;
     this.appId = config.appId || null;
     this.appSecret = config.appSecret || null;
+    this.pageId = config.pageId || null;
     this.app = express();
     this.app.use(express.json());
   }
@@ -103,39 +106,60 @@ export class InstagramChannel implements Channel {
         JSON.stringify(checkData, null, 2)
       );
 
-      // Subscribe the Instagram account's Facebook Page to receive webhook events
+      // Subscribe the Facebook Page to receive webhook events
       try {
-        // Get the Pages this token has access to
-        const pagesRes = await fetch(
-          `${GRAPH_API_BASE}/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${this.accessToken}`
-        );
-        const pagesData = await pagesRes.json() as any;
-        console.log(`  [Instagram] Pages found:`, JSON.stringify(pagesData, null, 2));
-
-        const pages = pagesData.data || [];
-        if (pages.length === 0) {
-          console.error(`  [Instagram] No Facebook Pages found. Make sure your token is a Page token or has pages_manage_metadata permission.`);
-        }
-
-        for (const page of pages) {
-          // Subscribe each page to the app's webhooks using the page's own access token
-          const pageToken = page.access_token || this.accessToken;
+        if (this.pageId) {
+          // Use the configured Page ID directly
+          console.log(`  [Instagram] Subscribing Page ${this.pageId} directly...`);
           const subRes = await fetch(
-            `${GRAPH_API_BASE}/${page.id}/subscribed_apps`,
+            `${GRAPH_API_BASE}/${this.pageId}/subscribed_apps`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 subscribed_fields: "messages",
-                access_token: pageToken,
+                access_token: this.accessToken,
               }),
             }
           );
           const subData = await subRes.json();
           if (subRes.ok) {
-            console.log(`  [Instagram] Page "${page.name}" (${page.id}) subscribed to webhook events`);
+            console.log(`  [Instagram] Page ${this.pageId} subscribed to webhook events!`);
           } else {
-            console.error(`  [Instagram] Page "${page.name}" subscription failed:`, JSON.stringify(subData));
+            console.error(`  [Instagram] Page subscription failed:`, JSON.stringify(subData));
+          }
+        } else {
+          // Fallback: try to find pages via /me/accounts
+          const pagesRes = await fetch(
+            `${GRAPH_API_BASE}/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${this.accessToken}`
+          );
+          const pagesData = await pagesRes.json() as any;
+          console.log(`  [Instagram] Pages found:`, JSON.stringify(pagesData, null, 2));
+
+          const pages = pagesData.data || [];
+          if (pages.length === 0) {
+            console.error(`  [Instagram] No Facebook Pages found. Set FACEBOOK_PAGE_ID in .env with your Page ID.`);
+          }
+
+          for (const page of pages) {
+            const pageToken = page.access_token || this.accessToken;
+            const subRes = await fetch(
+              `${GRAPH_API_BASE}/${page.id}/subscribed_apps`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  subscribed_fields: "messages",
+                  access_token: pageToken,
+                }),
+              }
+            );
+            const subData = await subRes.json();
+            if (subRes.ok) {
+              console.log(`  [Instagram] Page "${page.name}" (${page.id}) subscribed to webhook events`);
+            } else {
+              console.error(`  [Instagram] Page "${page.name}" subscription failed:`, JSON.stringify(subData));
+            }
           }
         }
       } catch (subError) {

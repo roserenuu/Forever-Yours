@@ -50,6 +50,7 @@ async function startGateway() {
       webhookUrl: process.env.INSTAGRAM_WEBHOOK_URL,
       appId: process.env.FACEBOOK_APP_ID,
       appSecret: process.env.FACEBOOK_APP_SECRET,
+      pageId: process.env.FACEBOOK_PAGE_ID,
     });
     channels.push(instagram);
   } else {
