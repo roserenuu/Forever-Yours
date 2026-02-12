@@ -1,4 +1,4 @@
-import { Client, Events, GatewayIntentBits, Message } from "discord.js";
+import { Client, GatewayIntentBits, Message } from "discord.js";
 import { Channel, OutgoingMessage } from "./types.js";
 import { ForeverYoursAgent } from "../core/agent.js";
 
@@ -24,13 +24,13 @@ export class DiscordChannel implements Channel {
   async connect(agent: ForeverYoursAgent): Promise<void> {
     this.agent = agent;
 
-    this.client.once(Events.ClientReady, (c) => {
+    this.client.once("ready", (c) => {
       console.log(
         `[Discord] Connected as ${c.user.tag} — Jesus Forever Yours agent is live`
       );
     });
 
-    this.client.on(Events.MessageCreate, async (message: Message) => {
+    this.client.on("messageCreate", async (message: Message) => {
       if (message.author.bot) return;
 
       // Respond to DMs or when mentioned
