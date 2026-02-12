@@ -36,11 +36,20 @@ export class DiscordChannel implements Channel {
     this.client.on("messageCreate", async (message: Message) => {
       if (message.author.bot) return;
 
-      // Respond to DMs or when mentioned
       const isMentioned = message.mentions.has(this.client.user!);
       const isDM = !message.guild;
 
-      if (!isDM && !isMentioned) return;
+      // Check if message is in a dedicated bot channel (name contains "forever-yours", "content", or "rose")
+      const isBotChannel =
+        message.channel &&
+        "name" in message.channel &&
+        typeof message.channel.name === "string" &&
+        /forever-yours|content-studio|rose-ai|love-notes|bot/i.test(
+          message.channel.name
+        );
+
+      // Respond to: DMs, @mentions, or any message in a dedicated bot channel
+      if (!isDM && !isMentioned && !isBotChannel) return;
 
       const content = message.content
         .replace(/<@!?\d+>/g, "")
