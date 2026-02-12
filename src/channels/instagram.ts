@@ -93,6 +93,15 @@ export class InstagramChannel implements Channel {
           `  [Instagram] You may need to update the webhook URL manually at https://developers.facebook.com`
         );
       }
+
+      // Verify current subscriptions
+      const checkUrl = `${GRAPH_API_BASE}/${this.appId}/subscriptions?access_token=${appAccessToken}`;
+      const checkRes = await fetch(checkUrl);
+      const checkData = await checkRes.json();
+      console.log(
+        `  [Instagram] Current subscriptions:`,
+        JSON.stringify(checkData, null, 2)
+      );
     } catch (error) {
       console.error("  [Instagram] Webhook registration error:", error);
     }
