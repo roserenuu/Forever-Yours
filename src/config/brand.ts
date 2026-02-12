@@ -14,6 +14,8 @@ export interface BrandVoice {
   avoidWords: string[];
   signatureStyle: string;
   closingPhrases: string[];
+  writingPatterns: string[];
+  sampleLoveNote: string;
 }
 
 export interface AudienceProfile {
@@ -43,18 +45,21 @@ export const DEFAULT_BRAND: BrandConfig = {
 
   voice: {
     tone: [
-      "warm",
-      "gentle",
-      "hopeful",
+      "tender",
       "intimate",
-      "faith-filled",
-      "encouraging",
+      "compassionate",
+      "reverent",
+      "honest",
+      "hopeful",
+      "nurturing",
     ],
     personality: [
-      "Like a heartfelt letter from God to His beloved",
-      "Speaks as if Jesus is whispering directly to the reader",
-      "Vulnerable yet strong — rooted in testimony",
-      "Poetic and devotional, never preachy",
+      "Written in first person from God's perspective, speaking directly to 'My Child'",
+      "Acknowledges real pain before offering hope — never dismissive",
+      "Reads like a personal handwritten letter from God to His beloved child",
+      "Poetic but accessible — no churchy jargon, no performative language",
+      "Builds from pain acknowledgment → God's response → truth/promise → hope",
+      "Deeply vulnerable yet grounded in scripture",
     ],
     avoidWords: [
       "hustle",
@@ -64,16 +69,40 @@ export const DEFAULT_BRAND: BrandConfig = {
       "universe",
       "toxic",
       "vibe check",
+      "blessed and highly favored",
+      "season of abundance",
+      "sis",
+      "girl boss",
+      "claim it",
+      "speak it into existence",
     ],
     signatureStyle:
-      "Love Notes from God — short, intimate devotional messages inspired by scripture that feel like personal letters from the Creator to His child.",
+      "Love Notes from God — intimate devotional messages (150-250 words) written as if God is speaking directly to His child. Each one opens with 'My Child,' and closes with 'Forever Yours, Heavenly Father' followed by a single NLT scripture. Each has a short evocative 2-3 word title. The writing uses parallel structure, present tense, and 'I' statements from God's perspective.",
     closingPhrases: [
-      "Forever Yours",
-      "You are seen. You are loved. You are His.",
-      "He is not done writing your story.",
-      "Rest in His arms today.",
-      "You were never walking alone.",
+      "Forever Yours, Heavenly Father",
     ],
+    writingPatterns: [
+      "Always opens with 'My Child,'",
+      "Always closes with 'Forever Yours, Heavenly Father'",
+      "Always ends with one scripture reference in NLT translation",
+      "Uses 'I see you', 'I am with you', 'I understand', 'Trust Me', 'Come to Me', 'Rest in'",
+      "Uses parallel structure: 'When you... I am your God of...' or 'I see you when... I see you when...'",
+      "Titles are 2-3 words, evocative and simple: 'Gentle Knock', 'Rest Is Holy', 'Beauty Within', 'Hold On'",
+      "150-250 words per Love Note (not counting scripture)",
+      "Addresses ONE specific struggle per note — goes deep, not broad",
+      "Never uses emojis inside devotional content",
+      "Builds: acknowledge pain → 'I am here' → God's truth → hope/promise",
+      "Uses 'My love' or 'beloved' sparingly for emphasis",
+      "References real feelings: guilt, shame, numbness, exhaustion, fear of vulnerability",
+    ],
+    sampleLoveNote: `My Child,
+
+I am with you in every moment and every chapter of your life. When happiness fills your heart, I am your God of blessings. When you are broken by pain, I am your God of healing. When you are wronged, I am your God of justice. When you are overwhelmed by fear, I am your God of courage. When guilt weighs heavily on you, I am your God of forgiveness. When shame makes you feel unworthy, I am your God of grace. When you see no way forward, I am your God of miracles. I am the same yesterday, today, and forever. You will never walk through a struggle or a joyful moment without Me by your side. In every season, I am your God.
+
+Forever Yours,
+Heavenly Father
+
+I am with you always, even to the end of the age. Matthew 28:20 NLT`,
   },
 
   audience: {
@@ -113,7 +142,7 @@ export const DEFAULT_BRAND: BrandConfig = {
   },
 
   scripture: {
-    preferredVersions: ["NIV", "ESV", "NLT", "MSG"],
+    preferredVersions: ["NLT"],
     coreVerses: [
       "Jeremiah 31:3 — I have loved you with an everlasting love; I have drawn you with unfailing kindness.",
       "Psalm 139:14 — I praise you because I am fearfully and wonderfully made.",
@@ -124,14 +153,16 @@ export const DEFAULT_BRAND: BrandConfig = {
       "Psalm 34:18 — The Lord is close to the brokenhearted.",
     ],
     themes: [
-      "God's unfailing love",
-      "Identity in Christ",
-      "Healing and restoration",
-      "Hope in dark seasons",
-      "Intimacy with Jesus",
-      "Grace and forgiveness",
-      "Purpose and calling",
-      "Surrendering to God",
+      "God's faithfulness in every season",
+      "Healing of the heart — grief, loss, rejection, heartbreak",
+      "Freedom from mental battles — anxiety, overthinking, fear, shame",
+      "Love and relationships — family, self-love, forgiveness, letting go",
+      "Being made new — repentance, identity, transformation, freedom from temptation",
+      "Rest and surrendering control to God",
+      "God's pursuit of you — even when you walked away",
+      "Worth and identity that comes from God, not the world",
+      "Trusting God when life doesn't make sense",
+      "God hearing your prayers even in silence",
     ],
   },
 };
