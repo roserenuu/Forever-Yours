@@ -36,17 +36,7 @@ async function startGateway() {
   const webChat = new WebChatChannel(webChatPort);
   channels.push(webChat);
 
-  // Discord (if token provided)
-  if (process.env.DISCORD_BOT_TOKEN) {
-    const discord = new DiscordChannel(process.env.DISCORD_BOT_TOKEN);
-    channels.push(discord);
-  } else {
-    console.log(
-      "  [Discord] Skipped — set DISCORD_BOT_TOKEN in .env to enable"
-    );
-  }
-
-  // Instagram DMs (if access token provided)
+  // Instagram DMs (if access token provided) — connect first so Discord errors don't block it
   if (process.env.INSTAGRAM_ACCESS_TOKEN) {
     const igPort = parseInt(process.env.INSTAGRAM_WEBHOOK_PORT || "8585");
     const instagram = new InstagramChannel({
@@ -58,6 +48,16 @@ async function startGateway() {
   } else {
     console.log(
       "  [Instagram] Skipped — set INSTAGRAM_ACCESS_TOKEN in .env to enable"
+    );
+  }
+
+  // Discord (if token provided)
+  if (process.env.DISCORD_BOT_TOKEN) {
+    const discord = new DiscordChannel(process.env.DISCORD_BOT_TOKEN);
+    channels.push(discord);
+  } else {
+    console.log(
+      "  [Discord] Skipped — set DISCORD_BOT_TOKEN in .env to enable"
     );
   }
 
