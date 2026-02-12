@@ -14,17 +14,26 @@ export class InstagramChannel implements Channel {
   private verifyToken: string;
   private port: number;
   private allowedUserIds: Set<string> | null;
+  private webhookUrl: string | null;
+  private appId: string | null;
+  private appSecret: string | null;
 
   constructor(config: {
     accessToken: string;
     verifyToken: string;
     port?: number;
     allowedUserIds?: string[];
+    webhookUrl?: string;
+    appId?: string;
+    appSecret?: string;
   }) {
     this.accessToken = config.accessToken;
     this.verifyToken = config.verifyToken;
     this.port = config.port || 8585;
     this.allowedUserIds = config.allowedUserIds ? new Set(config.allowedUserIds) : null;
+    this.webhookUrl = config.webhookUrl || null;
+    this.appId = config.appId || null;
+    this.appSecret = config.appSecret || null;
     this.app = express();
     this.app.use(express.json());
   }
@@ -34,16 +43,59 @@ export class InstagramChannel implements Channel {
     this.setupWebhook();
 
     return new Promise((resolve) => {
-      this.server = this.app.listen(this.port, () => {
+      this.server = this.app.listen(this.port, async () => {
         console.log(
           `  [Instagram] Webhook listening on port ${this.port} — DMs are live`
         );
-        console.log(
-          `  [Instagram] Set your Meta webhook URL to: https://your-domain.com/webhook`
-        );
+
+        // Auto-register webhook URL with Meta if configured
+        if (this.webhookUrl && this.appId && this.appSecret) {
+          await this.registerWebhook();
+        } else {
+          console.log(
+            `  [Instagram] Set INSTAGRAM_WEBHOOK_URL, FACEBOOK_APP_ID, and FACEBOOK_APP_SECRET in .env to auto-register webhook`
+          );
+        }
+
         resolve();
       });
     });
+  }
+
+  private async registerWebhook(): Promise<void> {
+    const callbackUrl = `${this.webhookUrl}/webhook`;
+    const appAccessToken = `${this.appId}|${this.appSecret}`;
+    const url = `${GRAPH_API_BASE}/${this.appId}/subscriptions`;
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          object: "instagram",
+          callback_url: callbackUrl,
+          verify_token: this.verifyToken,
+          fields: "messages",
+          access_token: appAccessToken,
+        }),
+      });
+
+      if (response.ok) {
+        console.log(
+          `  [Instagram] Webhook registered: ${callbackUrl}`
+        );
+      } else {
+        const errorData = await response.text();
+        console.error(
+          `  [Instagram] Webhook registration failed: ${errorData}`
+        );
+        console.log(
+          `  [Instagram] You may need to update the webhook URL manually at https://developers.facebook.com`
+        );
+      }
+    } catch (error) {
+      console.error("  [Instagram] Webhook registration error:", error);
+    }
   }
 
   async disconnect(): Promise<void> {

@@ -47,6 +47,9 @@ async function startGateway() {
       verifyToken: process.env.INSTAGRAM_VERIFY_TOKEN || "forever-yours-verify",
       port: igPort,
       allowedUserIds: allowedIds,
+      webhookUrl: process.env.INSTAGRAM_WEBHOOK_URL,
+      appId: process.env.FACEBOOK_APP_ID,
+      appSecret: process.env.FACEBOOK_APP_SECRET,
     });
     channels.push(instagram);
   } else {
