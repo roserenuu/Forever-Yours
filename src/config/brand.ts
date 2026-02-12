@@ -106,7 +106,7 @@ export const DEFAULT_BRAND: BrandConfig = {
 
   platforms: {
     instagram: {
-      handle: "jesusforeveryours",
+      handle: "roserenuu",
       creatorHandle: "roserenuu",
     },
     website: "https://jesusforeveryours.com",
