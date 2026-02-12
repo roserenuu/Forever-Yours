@@ -2,6 +2,7 @@ import "dotenv/config";
 import { ForeverYoursAgent } from "./core/agent.js";
 import { allSkills } from "./skills/index.js";
 import { DiscordChannel } from "./channels/discord.js";
+import { InstagramChannel } from "./channels/instagram.js";
 import { WebChatChannel } from "./channels/webchat.js";
 import { Channel } from "./channels/types.js";
 
@@ -42,6 +43,21 @@ async function startGateway() {
   } else {
     console.log(
       "  [Discord] Skipped — set DISCORD_BOT_TOKEN in .env to enable"
+    );
+  }
+
+  // Instagram DMs (if access token provided)
+  if (process.env.INSTAGRAM_ACCESS_TOKEN) {
+    const igPort = parseInt(process.env.INSTAGRAM_WEBHOOK_PORT || "8585");
+    const instagram = new InstagramChannel({
+      accessToken: process.env.INSTAGRAM_ACCESS_TOKEN,
+      verifyToken: process.env.INSTAGRAM_VERIFY_TOKEN || "forever-yours-verify",
+      port: igPort,
+    });
+    channels.push(instagram);
+  } else {
+    console.log(
+      "  [Instagram] Skipped — set INSTAGRAM_ACCESS_TOKEN in .env to enable"
     );
   }
 
