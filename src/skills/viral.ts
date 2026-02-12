@@ -180,4 +180,139 @@ Write ONLY the content plan, nothing else.`
   },
 };
 
-export const viralSkills = [hooksSkill, funnySkill, mixSkill];
+export const trendsSkill: Skill = {
+  name: "trends",
+  description:
+    "Get trending content formats, audio ideas, and what's working right now in the Christian creator space",
+  examples: [
+    "/trends what's working on Instagram reels right now",
+    "/trends trending formats for Christian TikTok",
+    "/trends YouTube Shorts ideas that are blowing up",
+  ],
+  async execute(ctx: SkillContext): Promise<SkillResult> {
+    const platform = ctx.input || "Instagram, TikTok, and YouTube";
+    const response = await ctx.agent.generateContent(
+      `You are a social media strategist for @jesusforeveryours, a Christian faith brand with 144K on Instagram, 56K on TikTok, and 8.5K on YouTube. Rose Renuu is the creator.
+
+Analyze what's currently trending and working for Christian/faith creators on: ${platform}
+
+Provide:
+
+## TRENDING FORMATS RIGHT NOW
+List 5-7 video/post formats that are currently getting massive reach. For each:
+- The format name and how it works
+- Why it's going viral (algorithm + audience psychology)
+- How to adapt it for faith content specifically
+- Example concept for @jesusforeveryours
+
+## AUDIO & SOUND TRENDS
+- 5 types of audio trending right now (worship remixes, spoken word over lo-fi, trending secular songs with faith twist, etc.)
+- Suggest specific worship songs or audio styles to use
+
+## WHAT'S WORKING FOR FAITH CREATORS
+- Content patterns that top Christian creators are using to grow right now
+- What the algorithm is currently favoring (length, format, posting frequency)
+- Engagement tactics that boost reach in the faith niche
+
+## PLATFORM-SPECIFIC TIPS
+- Instagram: What's getting pushed to Explore right now
+- TikTok: What's landing on FYP in the faith space
+- YouTube Shorts: What's converting viewers to subscribers
+
+## CONTENT THE FAITH NICHE IS MISSING
+- 3-5 gaps in Christian content that Rose could fill to stand out
+- Underserved topics or formats that would make her unique
+
+Base this on proven social media growth patterns and what has historically worked for faith creators in the 100K-500K range.
+
+Write ONLY the trend analysis, nothing else.`
+    );
+
+    return {
+      title: "Trending Content Analysis",
+      content: response,
+      suggestions: [
+        "Jump on trends within 48 hours — speed matters for virality",
+        "Put your own faith spin on secular trends for crossover reach",
+        "Save trending audios immediately — they get removed fast",
+      ],
+    };
+  },
+};
+
+export const growSkill: Skill = {
+  name: "grow",
+  description:
+    "Get platform-specific growth strategies tailored to your current follower counts",
+  examples: [
+    "/grow how to get to 200K on Instagram",
+    "/grow YouTube growth strategy from 8K to 50K",
+    "/grow TikTok strategy for faith content",
+  ],
+  async execute(ctx: SkillContext): Promise<SkillResult> {
+    const goal = ctx.input || "grow across all platforms";
+    const response = await ctx.agent.generateContent(
+      `You are a social media growth strategist for Rose Renuu (@roserenuu / @jesusforeveryours).
+
+Current stats:
+- Instagram: 144K followers
+- TikTok: 56K followers
+- YouTube: 8.5K subscribers
+
+Growth goal: ${goal}
+
+Create a specific, actionable growth strategy:
+
+## WHERE YOU ARE NOW
+- Analyze what each follower count means (what growth phase she's in per platform)
+- Identify the biggest growth lever for each platform at her current size
+
+## GROWTH STRATEGY
+For each platform, provide:
+
+### Instagram (144K → next milestone)
+- Posting frequency and best times
+- Content ratio (reels vs carousels vs stories vs lives)
+- Specific tactics to break past the 150K-200K plateau
+- How to increase saves and shares (the metrics that matter most)
+- Collaboration and cross-promotion strategies
+
+### TikTok (56K → next milestone)
+- How TikTok's algorithm differs from Instagram for faith content
+- Posting frequency (TikTok rewards volume differently)
+- Content that converts TikTok viewers into Instagram/YouTube followers
+- How to get on FYP consistently in the faith niche
+
+### YouTube (8.5K → next milestone)
+- Shorts strategy for subscriber growth
+- How to convert Shorts viewers into long-form watchers
+- SEO tips for faith/devotional content
+- The YouTube content that builds the most loyal community
+
+## CROSS-PLATFORM STRATEGY
+- How to use each platform to feed the others
+- Content repurposing workflow (create once, post everywhere)
+- Which platform to prioritize for maximum overall growth
+
+## THIS WEEK'S ACTION ITEMS
+- 5 specific things Rose should do THIS WEEK to accelerate growth
+- Quick wins vs long-term plays
+
+Be specific and tactical — not generic advice. Think about what actually moves the needle at her current size.
+
+Write ONLY the growth strategy, nothing else.`
+    );
+
+    return {
+      title: "Growth Strategy",
+      content: response,
+      suggestions: [
+        "Review this strategy weekly and track what's moving the needle",
+        "Focus on ONE platform's strategy at a time to avoid burnout",
+        "Consistency beats perfection — post even when it's not perfect",
+      ],
+    };
+  },
+};
+
+export const viralSkills = [hooksSkill, funnySkill, mixSkill, trendsSkill, growSkill];
