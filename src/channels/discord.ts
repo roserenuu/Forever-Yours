@@ -1,11 +1,14 @@
-import { Client, GatewayIntentBits, Message } from "discord.js";
+import Discord from "discord.js";
 import { Channel, OutgoingMessage } from "./types.js";
 import { ForeverYoursAgent } from "../core/agent.js";
+
+const { Client, GatewayIntentBits } = Discord;
+type Message = Discord.Message;
 
 export class DiscordChannel implements Channel {
   name = "discord";
   platform = "discord";
-  private client: Client;
+  private client: InstanceType<typeof Client>;
   private agent: ForeverYoursAgent | null = null;
   private token: string;
 
