@@ -75,10 +75,24 @@ export class WebChatChannel implements Channel {
       });
     });
 
-    this.server.listen(this.port, () => {
-      console.log(
-        `[WebChat] Jesus Forever Yours chat is live at http://localhost:${this.port}`
-      );
+    return new Promise((resolve, reject) => {
+      this.server!.on("error", (err: NodeJS.ErrnoException) => {
+        if (err.code === "EADDRINUSE") {
+          console.log(
+            `  [WebChat] Port ${this.port} is in use — trying ${this.port + 1}`
+          );
+          this.port++;
+          this.server!.listen(this.port);
+        } else {
+          reject(err);
+        }
+      });
+      this.server!.listen(this.port, () => {
+        console.log(
+          `[WebChat] Jesus Forever Yours chat is live at http://localhost:${this.port}`
+        );
+        resolve();
+      });
     });
   }
 

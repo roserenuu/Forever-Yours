@@ -1,3 +1,9 @@
+process.removeAllListeners("warning");
+process.on("warning", (w) => {
+  if (w.name !== "DeprecationWarning" || !w.message.includes("punycode")) {
+    console.warn(w);
+  }
+});
 import "dotenv/config";
 import { ForeverYoursAgent } from "./core/agent.js";
 import { allSkills } from "./skills/index.js";
