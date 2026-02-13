@@ -2,6 +2,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { BrandConfig, DEFAULT_BRAND } from "../config/brand.js";
 import { Skill, SkillResult } from "../skills/types.js";
 import { QAReviewer } from "./reviewer.js";
+import { SchedulerAgent } from "./scheduler.js";
+import { MarketerAgent } from "./marketer.js";
 
 export interface AgentMessage {
   role: "user" | "assistant";
@@ -23,6 +25,8 @@ export class ForeverYoursAgent {
   private skills: Map<string, Skill> = new Map();
   private conversationHistory: AgentMessage[] = [];
   private reviewer: QAReviewer | null = null;
+  private scheduler: SchedulerAgent;
+  private marketer: MarketerAgent;
 
   constructor(options: AgentOptions = {}) {
     this.client = new Anthropic();
@@ -33,6 +37,8 @@ export class ForeverYoursAgent {
     if (options.enableReviewer !== false) {
       this.reviewer = new QAReviewer(this.brand, this.model);
     }
+    this.scheduler = new SchedulerAgent(this.brand, this.model);
+    this.marketer = new MarketerAgent(this.brand, this.model);
   }
 
   registerSkill(skill: Skill): void {
@@ -65,7 +71,13 @@ Rose Renuu (@roserenuu / @jesusforeveryours) — Christian content creator, auth
 ${this.brand.mission}
 
 ## Your Role (You are Eden)
-You are Eden — Rose's personal content machine. When she asks for content, give her the BEST content — optimized for virality, engagement, and growth while staying true to her voice and faith. Think like her creative director, social media manager, copywriter, and growth strategist all in one. Every response should help her get closer to 1 million. Note: Your work will be reviewed by Selah (the QA agent) before it reaches Rose, so bring your A-game every time.
+You are Eden — Rose's personal content machine. When she asks for content, give her the BEST content — optimized for virality, engagement, and growth while staying true to her voice and faith. Think like her creative director, social media manager, copywriter, and growth strategist all in one. Every response should help her get closer to 1 million.
+
+## Your Team
+- **Selah** (QA Reviewer) — reviews everything you write before Rose sees it. Bring your A-game.
+- **Mara** (Scheduler) — plans the weekly content calendar. Rose uses /schedule to talk to her.
+- **Zion** (Marketing) — handles product promos and sales content. Rose uses /promote to talk to him.
+You handle all creative content. If Rose asks about scheduling, remind her to use /schedule. If she asks about product promos, remind her to use /promote.
 
 ## Rose Renuu's Voice — Study This Carefully
 Rose writes Love Notes as if God Himself is speaking directly to one person — His child. Her writing is:
@@ -125,10 +137,30 @@ When a user message starts with "/" followed by a skill name, execute that skill
   }
 
   async chat(userMessage: string): Promise<string> {
-    // Check if the message is a skill command
+    // Route to specialized agents first
     const skillMatch = userMessage.match(/^\/(\w+)\s*(.*)/s);
     if (skillMatch) {
       const [, skillName, skillInput] = skillMatch;
+
+      // Mara (Scheduler) handles /schedule
+      if (skillName === "schedule") {
+        console.log("[Mara] Planning your content calendar...");
+        const plan = await this.scheduler.planWeek(skillInput.trim());
+        console.log("[Mara] Calendar ready — sending to Rose.");
+        return `**Mara's Content Calendar**\n\n${plan}`;
+      }
+
+      // Zion (Marketing) handles /promote
+      if (skillName === "promote") {
+        console.log("[Zion] Crafting your marketing content...");
+        const promo = await this.marketer.promote(
+          skillInput.trim() || "Forever Yours devotional book"
+        );
+        console.log("[Zion] Promo ready — sending to Rose.");
+        return `**Zion's Marketing Plan**\n\n${promo}`;
+      }
+
+      // Eden handles all other skills
       const skill = this.skills.get(skillName);
       if (skill) {
         const result = await this.executeSkill(skill, skillInput.trim());
@@ -196,6 +228,8 @@ When a user message starts with "/" followed by a skill name, execute that skill
   clearHistory(): void {
     this.conversationHistory = [];
     this.reviewer?.clearHistory();
+    this.scheduler.clearHistory();
+    this.marketer.clearHistory();
   }
 
   getBrand(): BrandConfig {
