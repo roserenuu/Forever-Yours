@@ -5,14 +5,14 @@ import * as readline from "readline";
 
 async function main() {
   console.log("\n");
-  console.log("  ┌───────────────────────────────────────────────┐");
-  console.log("  │         JESUS FOREVER YOURS                    │");
-  console.log("  │         AI Brand Team — CLI Mode               │");
-  console.log("  │                                                │");
-  console.log("  │  Eden (Creator) · Selah (QA) · Mara (Schedule) │");
-  console.log("  │  Zion (Marketing)                              │");
-  console.log("  │  You are seen. You are loved. You are His.     │");
-  console.log("  └───────────────────────────────────────────────┘");
+  console.log("  ┌────────────────────────────────────────────────────┐");
+  console.log("  │           JESUS FOREVER YOURS                      │");
+  console.log("  │           AI Brand Team — CLI Mode                 │");
+  console.log("  │                                                    │");
+  console.log("  │  Eden (Creator) · Selah (QA) · Mara (Scheduler)   │");
+  console.log("  │  Zion (Marketing) · Navi (Analytics)               │");
+  console.log("  │  You are seen. You are loved. You are His.         │");
+  console.log("  └────────────────────────────────────────────────────┘");
   console.log("");
 
   const agent = new ForeverYoursAgent();
@@ -29,6 +29,7 @@ async function main() {
   console.log("  Team commands:");
   console.log("    /schedule — Mara plans your weekly content calendar");
   console.log("    /promote  — Zion creates marketing content for your products");
+  console.log("    /insights — Navi analyzes your performance and directs the team");
   console.log("");
   console.log('  Type a message or use a /skill command. Type "exit" to quit.\n');
 

@@ -4,6 +4,7 @@ import { Skill, SkillResult } from "../skills/types.js";
 import { QAReviewer } from "./reviewer.js";
 import { SchedulerAgent } from "./scheduler.js";
 import { MarketerAgent } from "./marketer.js";
+import { AnalyticsAgent } from "./analytics.js";
 
 export interface AgentMessage {
   role: "user" | "assistant";
@@ -27,6 +28,7 @@ export class ForeverYoursAgent {
   private reviewer: QAReviewer | null = null;
   private scheduler: SchedulerAgent;
   private marketer: MarketerAgent;
+  private analytics: AnalyticsAgent;
 
   constructor(options: AgentOptions = {}) {
     this.client = new Anthropic();
@@ -39,6 +41,7 @@ export class ForeverYoursAgent {
     }
     this.scheduler = new SchedulerAgent(this.brand, this.model);
     this.marketer = new MarketerAgent(this.brand, this.model);
+    this.analytics = new AnalyticsAgent(this.brand, this.model);
   }
 
   registerSkill(skill: Skill): void {
@@ -62,9 +65,12 @@ export class ForeverYoursAgent {
 
 ## WHO YOU WORK FOR
 Rose Renuu (@roserenuu / @jesusforeveryours) — Christian content creator, author of the "Forever Yours" devotional.
-- Instagram: 144K followers
+- Instagram: 144K followers (PRIMARY)
 - TikTok: 56K followers
 - YouTube: 8.5K subscribers
+- X (Twitter): Growing
+- Threads: Emerging
+- Facebook: Community building
 - Goal: 1 MILLION followers. Become the biggest and best Christian content creator on the internet.
 
 ## Your Mission
@@ -77,7 +83,8 @@ You are Eden — Rose's personal content machine. When she asks for content, giv
 - **Selah** (QA Reviewer) — reviews everything you write before Rose sees it. Bring your A-game.
 - **Mara** (Scheduler) — plans the weekly content calendar. Rose uses /schedule to talk to her.
 - **Zion** (Marketing) — handles product promos and sales content. Rose uses /promote to talk to him.
-You handle all creative content. If Rose asks about scheduling, remind her to use /schedule. If she asks about product promos, remind her to use /promote.
+- **Navi** (Analytics) — reads performance data and tells the team what's working. Rose uses /insights to talk to her. When Navi gives directives, FOLLOW THEM — she has the data.
+You handle all creative content. If Rose asks about scheduling, remind her to use /schedule. If she asks about product promos, remind her to use /promote. If she asks about what's working or analytics, remind her to use /insights.
 
 ## Rose Renuu's Voice — Study This Carefully
 Rose writes Love Notes as if God Himself is speaking directly to one person — His child. Her writing is:
@@ -148,6 +155,22 @@ When a user message starts with "/" followed by a skill name, execute that skill
         const plan = await this.scheduler.planWeek(skillInput.trim());
         console.log("[Mara] Calendar ready — sending to Rose.");
         return `**Mara's Content Calendar**\n\n${plan}`;
+      }
+
+      // Navi (Analytics) handles /insights
+      if (skillName === "insights") {
+        const input = skillInput.trim();
+        if (input) {
+          console.log("[Navi] Analyzing your data...");
+          const insights = await this.analytics.analyze(input);
+          console.log("[Navi] Insights ready — sending to Rose + team.");
+          return `**Navi's Insights Report**\n\n${insights}`;
+        } else {
+          console.log("[Navi] Running a general content audit...");
+          const audit = await this.analytics.quickAudit();
+          console.log("[Navi] Audit complete — sending to Rose + team.");
+          return `**Navi's Content Audit**\n\n${audit}`;
+        }
       }
 
       // Zion (Marketing) handles /promote
@@ -230,6 +253,7 @@ When a user message starts with "/" followed by a skill name, execute that skill
     this.reviewer?.clearHistory();
     this.scheduler.clearHistory();
     this.marketer.clearHistory();
+    this.analytics.clearHistory();
   }
 
   getBrand(): BrandConfig {

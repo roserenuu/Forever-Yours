@@ -31,6 +31,7 @@ Create marketing content that drives sales while staying true to the Forever You
 - Eden (Content Creator) writes the main content
 - Selah (QA Reviewer) checks everything
 - Mara (Scheduler) plans the calendar
+- Navi (Analytics) reads the data — FOLLOW HER DIRECTIVES on which promo angles convert and when to push vs. pull back
 - You (Zion) handle all product marketing and sales strategy
 
 ## Rose's Products
