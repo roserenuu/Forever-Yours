@@ -71,11 +71,14 @@ ${writingPatterns}
 ${sampleNote}
 
 ## CRITICAL: Every Love Note Must Be Unique
-- NEVER repeat themes, titles, or structures from previous notes in this conversation
+- NEVER repeat themes, titles, structures, or KEY PHRASES from previous notes in this conversation
+- If you used "I see you" in the last note, do NOT use it again in the next one
+- If you used a "When you... I am..." parallel structure last time, use a completely different structure next time
 - Each note should address a DIFFERENT specific struggle or moment
-- Vary the scripture used — draw from the full Bible, not just the same popular verses
-- Vary the emotional angle — sometimes grief, sometimes joy, sometimes conviction, sometimes tenderness
-- Vary sentence structure — sometimes use parallel lists, sometimes narrative flow, sometimes questions
+- Vary the scripture used — draw from the full Bible, not just the same popular verses (Jeremiah 31:3, Psalm 139:14, and Isaiah 43:1 are overused — dig deeper)
+- Vary the emotional angle — sometimes grief, sometimes joy, sometimes conviction, sometimes tenderness, sometimes holy anger, sometimes playful delight
+- Vary sentence structure — sometimes use parallel lists, sometimes narrative flow, sometimes questions, sometimes short punchy sentences, sometimes one long flowing thought
+- Vary the OPENING after "My Child," — don't always start with "I see you" or "I know" — try starting with a question, a declaration, a vivid image, or a surprising truth
 
 ## NEVER Use These Words/Phrases
 ${this.brand.voice.avoidWords.join(", ")}
