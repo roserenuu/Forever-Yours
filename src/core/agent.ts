@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { BrandConfig, DEFAULT_BRAND } from "../config/brand.js";
 import { Skill, SkillResult } from "../skills/types.js";
+import { QAReviewer } from "./reviewer.js";
 
 export interface AgentMessage {
   role: "user" | "assistant";
@@ -11,6 +12,7 @@ export interface AgentOptions {
   brand?: BrandConfig;
   model?: string;
   maxTokens?: number;
+  enableReviewer?: boolean;
 }
 
 export class ForeverYoursAgent {
@@ -20,12 +22,17 @@ export class ForeverYoursAgent {
   private maxTokens: number;
   private skills: Map<string, Skill> = new Map();
   private conversationHistory: AgentMessage[] = [];
+  private reviewer: QAReviewer | null = null;
 
   constructor(options: AgentOptions = {}) {
     this.client = new Anthropic();
     this.brand = options.brand ?? DEFAULT_BRAND;
     this.model = options.model ?? "claude-sonnet-4-5-20250929";
     this.maxTokens = options.maxTokens ?? 2048;
+
+    if (options.enableReviewer !== false) {
+      this.reviewer = new QAReviewer(this.brand, this.model);
+    }
   }
 
   registerSkill(skill: Skill): void {
@@ -138,8 +145,19 @@ When a user message starts with "/" followed by a skill name, execute that skill
       messages: this.conversationHistory,
     });
 
-    const assistantMessage =
+    let assistantMessage =
       response.content[0].type === "text" ? response.content[0].text : "";
+
+    // QA Reviewer checks the draft before it reaches the user
+    if (this.reviewer) {
+      const review = await this.reviewer.review(userMessage, assistantMessage);
+      if (!review.approved && review.revised) {
+        console.log(
+          `[QA Reviewer] Revised draft — issues: ${review.notes.join("; ")}`
+        );
+        assistantMessage = review.revised;
+      }
+    }
 
     this.conversationHistory.push({
       role: "assistant",
@@ -174,6 +192,7 @@ When a user message starts with "/" followed by a skill name, execute that skill
 
   clearHistory(): void {
     this.conversationHistory = [];
+    this.reviewer?.clearHistory();
   }
 
   getBrand(): BrandConfig {
