@@ -29,7 +29,7 @@ export class DiscordChannel implements Channel {
 
     this.client.once("ready", (c: Discord.Client<true>) => {
       console.log(
-        `[Discord] Connected as ${c.user.tag} — Jesus Forever Yours agent is live`
+        `[Discord] Connected as ${c.user.tag} — Eden + Selah are live`
       );
     });
 

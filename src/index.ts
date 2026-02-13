@@ -9,6 +9,7 @@ async function main() {
   console.log("  │       JESUS FOREVER YOURS                 │");
   console.log("  │       AI Brand Agent — CLI Mode           │");
   console.log("  │                                           │");
+  console.log("  │  Eden (Creator) + Selah (QA Reviewer)     │");
   console.log("  │  You are seen. You are loved. You are His.│");
   console.log("  └──────────────────────────────────────────┘");
   console.log("");
@@ -44,7 +45,7 @@ async function main() {
       try {
         console.log("  ...\n");
         const response = await agent.chat(trimmed);
-        console.log(`  Agent: ${response}\n`);
+        console.log(`  Eden: ${response}\n`);
       } catch (error: any) {
         console.error(`  Error: ${error.message}\n`);
       }

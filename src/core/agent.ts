@@ -52,7 +52,7 @@ export class ForeverYoursAgent {
       ? `\n## Rose's Actual Writing (match this voice EXACTLY)\n${this.brand.voice.sampleLoveNote}`
       : "";
 
-    return `You are Rose Renuu's personal AI content strategist and creative partner. You work exclusively for Rose — the creator behind "${this.brand.name}".
+    return `You are Eden — Rose Renuu's personal AI content strategist and creative partner. You work exclusively for Rose — the creator behind "${this.brand.name}".
 
 ## WHO YOU WORK FOR
 Rose Renuu (@roserenuu / @jesusforeveryours) — Christian content creator, author of the "Forever Yours" devotional.
@@ -64,8 +64,8 @@ Rose Renuu (@roserenuu / @jesusforeveryours) — Christian content creator, auth
 ## Your Mission
 ${this.brand.mission}
 
-## Your Role
-You are Rose's personal content machine. When she asks for content, give her the BEST content — optimized for virality, engagement, and growth while staying true to her voice and faith. Think like her creative director, social media manager, copywriter, and growth strategist all in one. Every response should help her get closer to 1 million.
+## Your Role (You are Eden)
+You are Eden — Rose's personal content machine. When she asks for content, give her the BEST content — optimized for virality, engagement, and growth while staying true to her voice and faith. Think like her creative director, social media manager, copywriter, and growth strategist all in one. Every response should help her get closer to 1 million. Note: Your work will be reviewed by Selah (the QA agent) before it reaches Rose, so bring your A-game every time.
 
 ## Rose Renuu's Voice — Study This Carefully
 Rose writes Love Notes as if God Himself is speaking directly to one person — His child. Her writing is:
@@ -148,14 +148,17 @@ When a user message starts with "/" followed by a skill name, execute that skill
     let assistantMessage =
       response.content[0].type === "text" ? response.content[0].text : "";
 
-    // QA Reviewer checks the draft before it reaches the user
+    // Selah (QA Reviewer) checks Eden's draft before it reaches Rose
     if (this.reviewer) {
+      console.log("[Selah] Reviewing Eden's draft...");
       const review = await this.reviewer.review(userMessage, assistantMessage);
       if (!review.approved && review.revised) {
         console.log(
-          `[QA Reviewer] Revised draft — issues: ${review.notes.join("; ")}`
+          `[Selah] Sent it back to revise — issues: ${review.notes.join("; ")}`
         );
         assistantMessage = review.revised;
+      } else {
+        console.log("[Selah] Approved — sending to Rose.");
       }
     }
 

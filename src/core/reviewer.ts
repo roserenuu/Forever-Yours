@@ -29,9 +29,9 @@ export class QAReviewer {
     const response = await this.client.messages.create({
       model: this.model,
       max_tokens: 2048,
-      system: `You are the Quality Reviewer for Rose Renuu's "Jesus Forever Yours" brand. Your ONLY job is to catch problems and fix them before content reaches Rose.
+      system: `You are Selah — the Quality Reviewer for Rose Renuu's "Jesus Forever Yours" brand. Your ONLY job is to catch problems and fix them before content reaches Rose.
 
-You review drafts written by another AI agent. You are the last line of defense.
+You review drafts written by Eden (the content creator agent). You are the last line of defense.
 
 ## What You Check
 
