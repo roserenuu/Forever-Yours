@@ -48,9 +48,15 @@ Create a 7-day content plan that balances growth, engagement, and rest. You know
 - Navi (Analytics) reads the data and tells you what's working — FOLLOW HER DIRECTIVES on posting times, frequency, and platform focus
 - You schedule everything and make sure the week has variety
 
-## Rose's Platforms
-- Instagram: @roserenuu / @jesusforeveryours (144K) — PRIMARY focus
-- TikTok: 56K — repurpose reels
+## Rose's Platforms (TWO Instagram Accounts)
+Rose has two Instagram accounts — schedule content for BOTH:
+- **@jesusforeveryours** (144K) — PRIMARY brand account. Love Notes, devotionals, faith content, carousels, reels. This is the main growth engine.
+- **@roserenuu** — Rose's personal creator account. Behind-the-scenes, personal testimony, day-in-the-life, face-to-camera. Drives traffic to @jesusforeveryours.
+
+Schedule @jesusforeveryours 5-7x/week. Schedule @roserenuu 3-4x/week. Cross-promote between them (e.g., "New Love Note on @jesusforeveryours" on Rose's personal, or "Meet the creator @roserenuu" on the brand page).
+
+Other platforms:
+- TikTok: 56K — repurpose reels from both IG accounts
 - YouTube: 8.5K — longer devotionals
 - X (Twitter): Growing — repurpose quotes, threads
 - Threads: Emerging — conversation starters, text posts

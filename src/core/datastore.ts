@@ -39,10 +39,17 @@ const DATA_FILE = path.join(process.cwd(), ".forever-yours-data.json");
 
 const DEFAULT_DATA: BrandData = {
   platforms: {
-    instagram: {
-      platform: "instagram",
+    ig_roserenuu: {
+      platform: "ig_roserenuu",
+      followers: 0,
+      updatedAt: new Date().toISOString(),
+      notes: "@roserenuu — Rose Renuu's personal creator account",
+    },
+    ig_jesusforeveryours: {
+      platform: "ig_jesusforeveryours",
       followers: 144000,
       updatedAt: new Date().toISOString(),
+      notes: "@jesusforeveryours — Jesus Forever Yours brand account",
     },
     tiktok: {
       platform: "tiktok",
@@ -183,7 +190,8 @@ export class DataStore {
         p.followersChange !== undefined && p.followersChange !== 0
           ? ` (${p.followersChange > 0 ? "+" : ""}${p.followersChange})`
           : "";
-      summary += `- **${p.platform.toUpperCase()}**: ${p.followers.toLocaleString()} followers${change}`;
+      const displayName = this.getDisplayName(p.platform);
+      summary += `- **${displayName}**: ${p.followers.toLocaleString()} followers${change}`;
       if (p.reach) summary += ` | Reach: ${p.reach.toLocaleString()}`;
       if (p.engagement) summary += ` | Engagement: ${p.engagement}%`;
       if (p.notes) summary += ` | ${p.notes}`;
@@ -222,9 +230,9 @@ export class DataStore {
     const results: string[] = [];
 
     for (const line of lines) {
-      // Try to match platform stats: "instagram 145000" or "ig: 145K reach 50000"
+      // Try to match platform stats: "roserenuu 50000" or "jfy: 145K reach 50000"
       const platformMatch = line.match(
-        /^(instagram|ig|tiktok|tt|youtube|yt|x|twitter|threads|facebook|fb)[:\s]+(.+)/i
+        /^(roserenuu|rose|jfy|jesusforeveryours|instagram|ig|tiktok|tt|youtube|yt|x|twitter|threads|facebook|fb)[:\s]+(.+)/i
       );
 
       if (platformMatch) {
@@ -273,9 +281,9 @@ export class DataStore {
           reach: 0,
         };
 
-        // Check for platform prefix
+        // Check for platform/account prefix
         const platInContent = rest.match(
-          /\b(ig|instagram|tt|tiktok|yt|youtube|x|twitter|threads|fb|facebook)\b/i
+          /\b(roserenuu|rose|jfy|jesusforeveryours|ig|instagram|tt|tiktok|yt|youtube|x|twitter|threads|fb|facebook)\b/i
         );
         if (platInContent) {
           content.platform = this.normalizePlatform(platInContent[1]);
@@ -310,7 +318,7 @@ export class DataStore {
             ""
           )
           .replace(
-            /\b(ig|instagram|tt|tiktok|yt|youtube|x|twitter|threads|fb|facebook)\b/gi,
+            /\b(roserenuu|rose|jfy|jesusforeveryours|ig|instagram|tt|tiktok|yt|youtube|x|twitter|threads|fb|facebook)\b/gi,
             ""
           )
           .replace(/\s+/g, " ")
@@ -331,8 +339,15 @@ export class DataStore {
 
   private normalizePlatform(raw: string): string {
     const map: Record<string, string> = {
-      ig: "instagram",
-      instagram: "instagram",
+      // Two Instagram accounts
+      roserenuu: "ig_roserenuu",
+      rose: "ig_roserenuu",
+      jfy: "ig_jesusforeveryours",
+      jesusforeveryours: "ig_jesusforeveryours",
+      // "instagram" or "ig" defaults to the brand account
+      ig: "ig_jesusforeveryours",
+      instagram: "ig_jesusforeveryours",
+      // Other platforms
       tt: "tiktok",
       tiktok: "tiktok",
       yt: "youtube",
@@ -344,6 +359,19 @@ export class DataStore {
       facebook: "facebook",
     };
     return map[raw.toLowerCase()] || raw.toLowerCase();
+  }
+
+  private getDisplayName(platform: string): string {
+    const names: Record<string, string> = {
+      ig_roserenuu: "IG @roserenuu (Rose)",
+      ig_jesusforeveryours: "IG @jesusforeveryours (JFY)",
+      tiktok: "TIKTOK",
+      youtube: "YOUTUBE",
+      x: "X (TWITTER)",
+      threads: "THREADS",
+      facebook: "FACEBOOK",
+    };
+    return names[platform] || platform.toUpperCase();
   }
 
   private parseNumber(raw: string): number {

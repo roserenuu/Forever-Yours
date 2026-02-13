@@ -48,7 +48,8 @@ export class Dashboard {
       for (const c of sorted.slice(0, 10)) {
         const metric = c.reach || c.views || 0;
         const engagement = this.getEngagementSummary(c);
-        const label = `[${c.platform.toUpperCase().padEnd(9)}] ${c.contentType.padEnd(10)}`;
+        const platName = this.getDisplayName(c.platform);
+        const label = `[${platName.padEnd(18)}] ${c.contentType.padEnd(10)}`;
         const topic =
           c.topic.length > 30 ? c.topic.slice(0, 27) + "..." : c.topic.padEnd(30);
 
@@ -110,7 +111,8 @@ export class Dashboard {
         ? ` (${p.followersChange > 0 ? "+" : ""}${p.followersChange.toLocaleString()})`
         : "";
 
-    let line = `  ${p.platform.toUpperCase().padEnd(11)} ${bar} ${p.followers.toLocaleString()}${change}\n`;
+    const displayName = this.getDisplayName(p.platform);
+    let line = `  ${displayName.padEnd(18)} ${bar} ${p.followers.toLocaleString()}${change}\n`;
 
     if (p.reach || p.engagement) {
       line += `  ${"".padEnd(11)} `;
@@ -141,6 +143,19 @@ export class Dashboard {
       groups[key].push(c);
     }
     return groups;
+  }
+
+  private getDisplayName(platform: string): string {
+    const names: Record<string, string> = {
+      ig_roserenuu: "@roserenuu",
+      ig_jesusforeveryours: "@jesusforeveryours",
+      tiktok: "TikTok",
+      youtube: "YouTube",
+      x: "X (Twitter)",
+      threads: "Threads",
+      facebook: "Facebook",
+    };
+    return names[platform] || platform;
   }
 
   private getMaxAvgReach(

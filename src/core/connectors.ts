@@ -11,25 +11,34 @@ export interface PlatformConnector {
 }
 
 /**
- * Instagram Graph API connector.
- * Requires: Facebook App + Instagram Business/Creator Account.
- * Env vars: INSTAGRAM_ACCESS_TOKEN
+ * Instagram Graph API connector — supports multiple accounts.
+ * Rose has two Instagram accounts that work together:
+ *   - @roserenuu (personal creator brand — Rose herself)
+ *   - @jesusforeveryours (ministry/content brand — 144K)
  *
- * Get your token:
- * 1. Create a Facebook App at developers.facebook.com
- * 2. Add Instagram Graph API product
- * 3. Connect your Instagram Business/Creator account
- * 4. Generate a long-lived access token
- * 5. Set INSTAGRAM_ACCESS_TOKEN in your .env
+ * Each account gets its own token and is tracked separately.
  */
 export class InstagramConnector implements PlatformConnector {
-  platform = "instagram";
+  platform: string;
+  private label: string;
+  private handle: string;
   private token: string;
   private dataStore: DataStore;
 
-  constructor(dataStore: DataStore) {
-    this.token = process.env.INSTAGRAM_ACCESS_TOKEN || "";
+  constructor(
+    dataStore: DataStore,
+    options: {
+      platform: string;
+      label: string;
+      handle: string;
+      envVar: string;
+    }
+  ) {
     this.dataStore = dataStore;
+    this.platform = options.platform;
+    this.label = options.label;
+    this.handle = options.handle;
+    this.token = process.env[options.envVar] || "";
   }
 
   isConfigured(): boolean {
@@ -38,7 +47,7 @@ export class InstagramConnector implements PlatformConnector {
 
   async fetchStats(): Promise<string> {
     if (!this.isConfigured()) {
-      return "Instagram not connected. Set INSTAGRAM_ACCESS_TOKEN in .env";
+      return `${this.label} (@${this.handle}) not connected. Set the token in .env`;
     }
 
     try {
@@ -49,11 +58,15 @@ export class InstagramConnector implements PlatformConnector {
       const account = (await accountRes.json()) as Record<string, unknown>;
 
       if (account.error) {
-        return `Instagram API error: ${(account.error as Record<string, string>).message}`;
+        return `${this.label} API error: ${(account.error as Record<string, string>).message}`;
       }
 
       const followers = (account.followers_count as number) || 0;
-      this.dataStore.updatePlatform("instagram", { followers });
+      const username = (account.username as string) || this.handle;
+      this.dataStore.updatePlatform(this.platform, {
+        followers,
+        notes: `@${username}`,
+      });
 
       // Fetch recent media insights
       const mediaRes = await fetch(
@@ -64,7 +77,6 @@ export class InstagramConnector implements PlatformConnector {
 
       let imported = 0;
       for (const post of posts.slice(0, 20)) {
-        // Get individual post insights (reach, saves, shares)
         try {
           const insightsRes = await fetch(
             `https://graph.instagram.com/${post.id}/insights?metric=reach,saved,shares&access_token=${this.token}`
@@ -73,11 +85,14 @@ export class InstagramConnector implements PlatformConnector {
             string,
             unknown
           >;
-          const metrics = (insights.data as Array<Record<string, unknown>>) || [];
+          const metrics =
+            (insights.data as Array<Record<string, unknown>>) || [];
 
           const getMetricValue = (name: string): number => {
             const metric = metrics.find((m) => m.name === name);
-            const values = metric?.values as Array<Record<string, number>> | undefined;
+            const values = metric?.values as
+              | Array<Record<string, number>>
+              | undefined;
             return values?.[0]?.value || 0;
           };
           const reach = getMetricValue("reach");
@@ -85,7 +100,7 @@ export class InstagramConnector implements PlatformConnector {
           const shares = getMetricValue("shares");
 
           this.dataStore.addContent({
-            platform: "instagram",
+            platform: this.platform,
             contentType: ((post.media_type as string) || "post").toLowerCase(),
             topic:
               ((post.caption as string) || "").slice(0, 100) || "untitled",
@@ -102,10 +117,10 @@ export class InstagramConnector implements PlatformConnector {
         }
       }
 
-      return `Instagram synced: ${followers.toLocaleString()} followers, ${imported} recent posts imported`;
+      return `${this.label} (@${username}) synced: ${followers.toLocaleString()} followers, ${imported} recent posts imported`;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      return `Instagram fetch failed: ${message}`;
+      return `${this.label} fetch failed: ${message}`;
     }
   }
 }
@@ -335,7 +350,19 @@ export class ConnectorManager {
   constructor(dataStore: DataStore) {
     this.dataStore = dataStore;
     this.connectors = [
-      new InstagramConnector(dataStore),
+      // Two Instagram accounts — Rose's personal + brand
+      new InstagramConnector(dataStore, {
+        platform: "ig_roserenuu",
+        label: "Instagram (Rose)",
+        handle: "roserenuu",
+        envVar: "INSTAGRAM_ROSERENUU_TOKEN",
+      }),
+      new InstagramConnector(dataStore, {
+        platform: "ig_jesusforeveryours",
+        label: "Instagram (JFY)",
+        handle: "jesusforeveryours",
+        envVar: "INSTAGRAM_JFY_TOKEN",
+      }),
       new YouTubeConnector(dataStore),
       new TikTokConnector(dataStore),
       new XConnector(dataStore),
@@ -408,8 +435,11 @@ No API keys detected. Here's how to connect each platform:
 Add these to your \`.env\` file:
 
 \`\`\`
-# Instagram (via Facebook Graph API)
-INSTAGRAM_ACCESS_TOKEN=your_token_here
+# Instagram — @roserenuu (Rose's personal creator account)
+INSTAGRAM_ROSERENUU_TOKEN=your_token_here
+
+# Instagram — @jesusforeveryours (brand/ministry account)
+INSTAGRAM_JFY_TOKEN=your_token_here
 
 # YouTube (via Google Cloud)
 YOUTUBE_API_KEY=your_key_here
