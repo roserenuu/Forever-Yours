@@ -5,6 +5,7 @@ import { QAReviewer } from "./reviewer.js";
 import { SchedulerAgent } from "./scheduler.js";
 import { MarketerAgent } from "./marketer.js";
 import { AnalyticsAgent } from "./analytics.js";
+import { DataStore } from "./datastore.js";
 
 export interface AgentMessage {
   role: "user" | "assistant";
@@ -29,6 +30,7 @@ export class ForeverYoursAgent {
   private scheduler: SchedulerAgent;
   private marketer: MarketerAgent;
   private analytics: AnalyticsAgent;
+  private dataStore: DataStore;
 
   constructor(options: AgentOptions = {}) {
     this.client = new Anthropic();
@@ -42,6 +44,7 @@ export class ForeverYoursAgent {
     this.scheduler = new SchedulerAgent(this.brand, this.model);
     this.marketer = new MarketerAgent(this.brand, this.model);
     this.analytics = new AnalyticsAgent(this.brand, this.model);
+    this.dataStore = new DataStore();
   }
 
   registerSkill(skill: Skill): void {
@@ -140,7 +143,9 @@ ${skillList}
 9. Be proactive — if Rose asks for a love note, also suggest how to repurpose it across platforms for maximum reach.
 10. Think like the best social media strategist in the game. Rose is going to 1 million. Help her get there.
 
-When a user message starts with "/" followed by a skill name, execute that skill with the provided input.`;
+When a user message starts with "/" followed by a skill name, execute that skill with the provided input.
+
+${this.dataStore.getSummaryForAgents()}`;
   }
 
   async chat(userMessage: string): Promise<string> {
@@ -149,35 +154,58 @@ When a user message starts with "/" followed by a skill name, execute that skill
     if (skillMatch) {
       const [, skillName, skillInput] = skillMatch;
 
-      // Mara (Scheduler) handles /schedule
+      // /sync — Feed data into the system
+      if (skillName === "sync") {
+        const input = skillInput.trim();
+        if (!input) {
+          return `**How to sync your data**\n\nPaste your stats in any of these formats:\n\n**Platform stats:**\n\`instagram 145000 followers\`\n\`tiktok 58000 followers reach 500000\`\n\`youtube 9000 subs engagement 4.5%\`\n\n**Content performance:**\n\`reel identity in Christ 50000 reach 2000 saves 500 shares\`\n\`carousel love notes 30000 reach 5000 saves\`\n\n**Multiple lines at once:**\n\`\`\`\ninstagram 145000 followers reach 800000\ntiktok 58000 followers\nreel identity reel 50000 views 2000 likes\ncarousel healing series 30000 reach 5000 saves\n\`\`\`\n\nYour data is saved locally and every agent reads it automatically.`;
+        }
+        console.log("[DataStore] Syncing your data...");
+        const results = this.dataStore.parseAndSync(input);
+        return `**Data Synced**\n\n${results}\n\nAll agents now have access to your latest data. Use \`/stats\` to see everything or \`/insights\` for Navi's analysis.`;
+      }
+
+      // /stats — View your current data dashboard
+      if (skillName === "stats") {
+        return `**Your Brand Dashboard**\n\n${this.dataStore.getSummaryForAgents()}`;
+      }
+
+      // Mara (Scheduler) handles /schedule — inject live data
       if (skillName === "schedule") {
         console.log("[Mara] Planning your content calendar...");
-        const plan = await this.scheduler.planWeek(skillInput.trim());
+        const dataContext = this.dataStore.getSummaryForAgents();
+        const plan = await this.scheduler.planWeek(
+          `${skillInput.trim()}\n\n${dataContext}`
+        );
         console.log("[Mara] Calendar ready — sending to Rose.");
         return `**Mara's Content Calendar**\n\n${plan}`;
       }
 
-      // Navi (Analytics) handles /insights
+      // Navi (Analytics) handles /insights — inject live data
       if (skillName === "insights") {
+        const dataContext = this.dataStore.getSummaryForAgents();
         const input = skillInput.trim();
         if (input) {
           console.log("[Navi] Analyzing your data...");
-          const insights = await this.analytics.analyze(input);
+          const insights = await this.analytics.analyze(
+            `${input}\n\n${dataContext}`
+          );
           console.log("[Navi] Insights ready — sending to Rose + team.");
           return `**Navi's Insights Report**\n\n${insights}`;
         } else {
-          console.log("[Navi] Running a general content audit...");
-          const audit = await this.analytics.quickAudit();
-          console.log("[Navi] Audit complete — sending to Rose + team.");
-          return `**Navi's Content Audit**\n\n${audit}`;
+          console.log("[Navi] Analyzing live dashboard data...");
+          const insights = await this.analytics.analyze(dataContext);
+          console.log("[Navi] Insights ready — sending to Rose + team.");
+          return `**Navi's Insights Report**\n\n${insights}`;
         }
       }
 
-      // Zion (Marketing) handles /promote
+      // Zion (Marketing) handles /promote — inject live data
       if (skillName === "promote") {
         console.log("[Zion] Crafting your marketing content...");
+        const dataContext = this.dataStore.getSummaryForAgents();
         const promo = await this.marketer.promote(
-          skillInput.trim() || "Forever Yours devotional book"
+          `${skillInput.trim() || "Forever Yours devotional book"}\n\n${dataContext}`
         );
         console.log("[Zion] Promo ready — sending to Rose.");
         return `**Zion's Marketing Plan**\n\n${promo}`;

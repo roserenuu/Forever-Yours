@@ -31,6 +31,10 @@ async function main() {
   console.log("    /promote  — Zion creates marketing content for your products");
   console.log("    /insights — Navi analyzes your performance and directs the team");
   console.log("");
+  console.log("  Data commands:");
+  console.log("    /sync     — Feed your platform stats and content performance data");
+  console.log("    /stats    — View your live brand dashboard");
+  console.log("");
   console.log('  Type a message or use a /skill command. Type "exit" to quit.\n');
 
   const rl = readline.createInterface({
