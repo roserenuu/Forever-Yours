@@ -32,8 +32,12 @@ async function main() {
   console.log("    /insights — Navi analyzes your performance and directs the team");
   console.log("");
   console.log("  Data commands:");
-  console.log("    /sync     — Feed your platform stats and content performance data");
-  console.log("    /stats    — View your live brand dashboard");
+  console.log("    /dashboard — Visual analytics dashboard");
+  console.log("    /sync      — Feed your stats manually");
+  console.log("    /import    — Import CSV from platform analytics exports");
+  console.log("    /fetch     — Pull live data from connected APIs");
+  console.log("    /connect   — Set up API connections to your platforms");
+  console.log("    /stats     — View raw data summary");
   console.log("");
   console.log('  Type a message or use a /skill command. Type "exit" to quit.\n');
 

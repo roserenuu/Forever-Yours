@@ -6,6 +6,9 @@ import { SchedulerAgent } from "./scheduler.js";
 import { MarketerAgent } from "./marketer.js";
 import { AnalyticsAgent } from "./analytics.js";
 import { DataStore } from "./datastore.js";
+import { CsvImporter } from "./csv-import.js";
+import { ConnectorManager } from "./connectors.js";
+import { Dashboard } from "./dashboard.js";
 
 export interface AgentMessage {
   role: "user" | "assistant";
@@ -31,6 +34,9 @@ export class ForeverYoursAgent {
   private marketer: MarketerAgent;
   private analytics: AnalyticsAgent;
   private dataStore: DataStore;
+  private csvImporter: CsvImporter;
+  private connectors: ConnectorManager;
+  private dashboard: Dashboard;
 
   constructor(options: AgentOptions = {}) {
     this.client = new Anthropic();
@@ -45,6 +51,9 @@ export class ForeverYoursAgent {
     this.marketer = new MarketerAgent(this.brand, this.model);
     this.analytics = new AnalyticsAgent(this.brand, this.model);
     this.dataStore = new DataStore();
+    this.csvImporter = new CsvImporter(this.dataStore);
+    this.connectors = new ConnectorManager(this.dataStore);
+    this.dashboard = new Dashboard(this.dataStore);
   }
 
   registerSkill(skill: Skill): void {
@@ -168,6 +177,42 @@ ${this.dataStore.getSummaryForAgents()}`;
       // /stats — View your current data dashboard
       if (skillName === "stats") {
         return `**Your Brand Dashboard**\n\n${this.dataStore.getSummaryForAgents()}`;
+      }
+
+      // /dashboard — Visual analytics dashboard
+      if (skillName === "dashboard") {
+        return this.dashboard.render();
+      }
+
+      // /import — Import CSV analytics exports
+      if (skillName === "import") {
+        const filePath = skillInput.trim();
+        if (!filePath) {
+          return `**Import Analytics CSV**\n\nUsage: \`/import path/to/file.csv\`\n\nExport analytics from your platform dashboards:\n- **Instagram**: Professional Dashboard > Insights > Export\n- **YouTube**: Studio > Analytics > Advanced Mode > Export\n- **TikTok**: Analytics > Export Data\n- **X**: Analytics > Export\n- **Facebook**: Insights > Export\n\nThe importer auto-detects which platform the CSV is from.`;
+        }
+        console.log("[DataStore] Importing CSV...");
+        const result = this.csvImporter.importFile(filePath);
+        return `**CSV Import Complete**\n\n${result}\n\nUse \`/dashboard\` to see your updated analytics or \`/insights\` for Navi's analysis.`;
+      }
+
+      // /fetch — Pull live data from connected APIs
+      if (skillName === "fetch") {
+        const platform = skillInput.trim();
+        if (platform) {
+          console.log(`[Connectors] Fetching ${platform} data...`);
+          const result = await this.connectors.fetchOne(platform);
+          return `**API Fetch**\n\n${result}`;
+        }
+        console.log("[Connectors] Fetching all connected platforms...");
+        const result = await this.connectors.fetchAll();
+        return `**API Fetch**\n\n${result}`;
+      }
+
+      // /connect — Show connection status and setup guide
+      if (skillName === "connect") {
+        const status = this.connectors.getStatus();
+        const guide = this.connectors.getSetupGuide();
+        return `${status}\n\n---\n\n${guide}`;
       }
 
       // Mara (Scheduler) handles /schedule — inject live data
