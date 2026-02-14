@@ -161,19 +161,40 @@ export class YouTubeConnector implements PlatformConnector {
   private async fetchTranscript(videoId: string): Promise<string | null> {
     try {
       const pageRes = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
-        headers: { "Accept-Language": "en" },
+        headers: {
+          "Accept-Language": "en",
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        },
       });
       const html = await pageRes.text();
 
-      // Extract captions player response from page
-      const captionMatch = html.match(/"captions":\s*(\{.*?"playerCaptionsTracklistRenderer".*?\})\s*,\s*"videoDetails"/s);
-      if (!captionMatch) return null;
+      // Extract the full ytInitialPlayerResponse JSON from the page
+      const playerMatch = html.match(/ytInitialPlayerResponse\s*=\s*(\{.+?\})\s*;\s*(?:var\s|<\/script>)/s);
+      if (!playerMatch) return null;
 
-      // Find the caption track URL (prefer English, fall back to any)
-      const trackMatch = captionMatch[1].match(/"baseUrl"\s*:\s*"(https:\/\/www\.youtube\.com\/api\/timedtext[^"]*)"/);
-      if (!trackMatch) return null;
+      let playerData: Record<string, unknown>;
+      try {
+        playerData = JSON.parse(playerMatch[1]);
+      } catch {
+        return null;
+      }
 
-      const captionUrl = trackMatch[1].replace(/\\u0026/g, "&");
+      // Navigate to captions tracks
+      const captions = playerData.captions as Record<string, unknown> | undefined;
+      if (!captions) return null;
+
+      const renderer = captions.playerCaptionsTracklistRenderer as Record<string, unknown> | undefined;
+      if (!renderer) return null;
+
+      const tracks = renderer.captionTracks as Array<Record<string, string>> | undefined;
+      if (!tracks || tracks.length === 0) return null;
+
+      // Prefer English, fall back to first available track
+      const enTrack = tracks.find((t) => t.languageCode === "en" || t.languageCode?.startsWith("en"));
+      const track = enTrack || tracks[0];
+      if (!track?.baseUrl) return null;
+
+      const captionUrl = track.baseUrl;
       const captionRes = await fetch(captionUrl);
       const xml = await captionRes.text();
 
@@ -271,6 +292,8 @@ export class YouTubeConnector implements PlatformConnector {
         });
         await Promise.all(transcriptPromises);
 
+        let descriptionFallbacks = 0;
+
         for (const item of detailItems) {
           const snippet = item.snippet as Record<string, string>;
           const vStats = item.statistics as Record<string, string>;
@@ -287,7 +310,12 @@ export class YouTubeConnector implements PlatformConnector {
 
           if (isShort) shortsCount++;
 
-          const transcript = transcriptMap.get(videoId) || undefined;
+          // Use transcript if available, fall back to video description
+          let transcript = transcriptMap.get(videoId) || undefined;
+          if (!transcript && snippet.description && snippet.description.trim().length > 10) {
+            transcript = `[Description] ${snippet.description.trim()}`;
+            descriptionFallbacks++;
+          }
 
           this.dataStore.addContent({
             platform: "youtube",
@@ -305,7 +333,8 @@ export class YouTubeConnector implements PlatformConnector {
       }
 
       const withTranscripts = Array.from(transcriptMap.values()).filter(Boolean).length;
-      return `YouTube synced: ${subscribers.toLocaleString()} subscribers, ${imported} recent videos imported (${shortsCount} Shorts, ${imported - shortsCount} long-form, ${withTranscripts} transcripts loaded)`;
+      const totalContent = withTranscripts + descriptionFallbacks;
+      return `YouTube synced: ${subscribers.toLocaleString()} subscribers, ${imported} recent videos imported (${shortsCount} Shorts, ${imported - shortsCount} long-form, ${withTranscripts} transcripts + ${descriptionFallbacks} descriptions loaded)`;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       return `YouTube fetch failed: ${message}`;
