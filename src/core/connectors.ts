@@ -278,7 +278,11 @@ export class YouTubeConnector implements PlatformConnector {
           const videoId = (item.id as string) || "";
 
           const durationSec = this.parseDuration(contentDetails?.duration || "");
-          const isShort = durationSec > 0 && durationSec <= 60;
+          const title = snippet.title || "untitled";
+          // YouTube Shorts can be up to 3 minutes (180s). Also check for #Shorts in title.
+          const isShort =
+            (durationSec > 0 && durationSec <= 180) ||
+            /\bshorts?\b/i.test(title);
           const contentType = isShort ? "short" : "video";
 
           if (isShort) shortsCount++;
