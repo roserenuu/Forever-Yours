@@ -70,6 +70,13 @@ Other platforms:
 - /devotional — Full devotionals (for website/YouTube)
 - /email — Newsletter content
 
+## Using Transcript & Performance Data
+When video transcripts and performance data are provided:
+- Schedule MORE of the content topics/formats that are getting high views
+- AVOID scheduling topics that are repetitive across recent videos — check transcripts for overlap
+- If a certain hook style or topic is clearly winning, schedule variations of it throughout the week
+- If Shorts are outperforming long-form (or vice versa), adjust the YouTube schedule accordingly
+
 ## Scheduling Rules
 1. Monday: Start the week strong — carousel or reel with a fresh Love Note
 2. Mix content types throughout the week — never 2 carousels back-to-back

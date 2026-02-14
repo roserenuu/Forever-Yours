@@ -164,6 +164,29 @@ export class DataStore {
       .slice(0, limit);
   }
 
+  /**
+   * Get a transcript-focused brief for agents that need to analyze
+   * what Rose is saying in her videos and how it correlates with performance.
+   * Sorted by views (best-performing first) so agents see what works.
+   */
+  getTranscriptBrief(): string {
+    const withTranscripts = this.data.recentContent
+      .filter((c) => c.platform === "youtube" && c.transcript)
+      .sort((a, b) => (b.views || 0) - (a.views || 0));
+
+    if (withTranscripts.length === 0) {
+      return "";
+    }
+
+    let brief = "### YouTube Video Transcripts (sorted by views, best first)\n\n";
+    for (const c of withTranscripts) {
+      brief += `**[${c.contentType.toUpperCase()}] "${c.topic}"** — ${(c.views || 0).toLocaleString()} views | ${(c.likes || 0).toLocaleString()} likes | ${(c.comments || 0).toLocaleString()} comments`;
+      if (c.postedAt) brief += ` | Posted: ${c.postedAt.split("T")[0]}`;
+      brief += `\nTranscript: ${c.transcript}\n\n`;
+    }
+    return brief;
+  }
+
   // --- Goals ---
 
   setGoals(goals: string[]): void {

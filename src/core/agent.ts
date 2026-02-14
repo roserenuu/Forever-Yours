@@ -160,6 +160,14 @@ ${skillList}
 ## Data & Analytics Commands
 ${dataCommands}
 
+## Using Transcript & Performance Data
+When video transcripts and performance data are available in the dashboard below:
+- Study Rose's TOP-performing video transcripts — mirror those hooks, topics, and energy in new scripts
+- Study the LOWEST-performing transcripts — do NOT repeat those hooks, openings, or topics
+- If Rose keeps saying the same things across multiple videos (check transcripts), write something FRESH — flag the repetition to her
+- When writing reel/Short scripts, model the structure after her highest-viewed videos
+- Use her actual phrases from winning videos as building blocks for new content (authentic voice)
+
 ## Guidelines
 1. Every piece of content should point people to the love of Jesus AND be optimized for maximum reach.
 2. Match Rose's EXACT voice — study the sample Love Note above. If it doesn't sound like Rose wrote it, rewrite it.
@@ -175,7 +183,9 @@ ${dataCommands}
 When a user message starts with "/" followed by a skill name, execute that skill with the provided input.
 ALL slash commands listed above are valid — including /fetch, /sync, /stats, /dashboard, /import, and /connect. These data commands are handled automatically by the system. If a user asks about them or wants to use them, confirm they are available and guide them on usage.
 
-${this.dataStore.getSummaryForAgents()}`;
+${this.dataStore.getSummaryForAgents()}
+
+${this.dataStore.getTranscriptBrief()}`;
   }
 
   async chat(userMessage: string): Promise<string> {
@@ -236,42 +246,54 @@ ${this.dataStore.getSummaryForAgents()}`;
         return `${status}\n\n---\n\n${guide}`;
       }
 
-      // Mara (Scheduler) handles /schedule — inject live data
+      // Mara (Scheduler) handles /schedule — inject live data + transcripts
       if (skillName === "schedule") {
         console.log("[Mara] Planning your content calendar...");
         const dataContext = this.dataStore.getSummaryForAgents();
+        const transcriptBrief = this.dataStore.getTranscriptBrief();
+        const fullContext = transcriptBrief
+          ? `${dataContext}\n\n${transcriptBrief}`
+          : dataContext;
         const plan = await this.scheduler.planWeek(
-          `${skillInput.trim()}\n\n${dataContext}`
+          `${skillInput.trim()}\n\n${fullContext}`
         );
         console.log("[Mara] Calendar ready — sending to Rose.");
         return `**Mara's Content Calendar**\n\n${plan}`;
       }
 
-      // Navi (Analytics) handles /insights — inject live data
+      // Navi (Analytics) handles /insights — inject live data + transcripts
       if (skillName === "insights") {
         const dataContext = this.dataStore.getSummaryForAgents();
+        const transcriptBrief = this.dataStore.getTranscriptBrief();
+        const fullContext = transcriptBrief
+          ? `${dataContext}\n\n${transcriptBrief}`
+          : dataContext;
         const input = skillInput.trim();
         if (input) {
-          console.log("[Navi] Analyzing your data...");
+          console.log("[Navi] Analyzing your data + transcripts...");
           const insights = await this.analytics.analyze(
-            `${input}\n\n${dataContext}`
+            `${input}\n\n${fullContext}`
           );
           console.log("[Navi] Insights ready — sending to Rose + team.");
           return `**Navi's Insights Report**\n\n${insights}`;
         } else {
-          console.log("[Navi] Analyzing live dashboard data...");
-          const insights = await this.analytics.analyze(dataContext);
+          console.log("[Navi] Analyzing live dashboard data + transcripts...");
+          const insights = await this.analytics.analyze(fullContext);
           console.log("[Navi] Insights ready — sending to Rose + team.");
           return `**Navi's Insights Report**\n\n${insights}`;
         }
       }
 
-      // Zion (Marketing) handles /promote — inject live data
+      // Zion (Marketing) handles /promote — inject live data + transcripts
       if (skillName === "promote") {
         console.log("[Zion] Crafting your marketing content...");
         const dataContext = this.dataStore.getSummaryForAgents();
+        const transcriptBrief = this.dataStore.getTranscriptBrief();
+        const fullContext = transcriptBrief
+          ? `${dataContext}\n\n${transcriptBrief}`
+          : dataContext;
         const promo = await this.marketer.promote(
-          `${skillInput.trim() || "Forever Yours devotional book"}\n\n${dataContext}`
+          `${skillInput.trim() || "Forever Yours devotional book"}\n\n${fullContext}`
         );
         console.log("[Zion] Promo ready — sending to Rose.");
         return `**Zion's Marketing Plan**\n\n${promo}`;

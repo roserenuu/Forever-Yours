@@ -45,6 +45,13 @@ Tailor promos differently for each account. @jesusforeveryours gets more polishe
 3. **Social Media Presence** — The brand itself is a product (driving followers, engagement, and influence for future deals)
 4. **@roserenuu personal brand** — Rose herself is a product. Her personal account drives authenticity and trust that feeds into everything else.
 
+## Using Transcript & Performance Data
+When video transcripts and performance data are provided:
+- Study what messaging/hooks are resonating in Rose's best-performing videos and mirror that language in promos
+- If a video about a specific topic went viral, create promo content that ties the product to that same topic
+- Avoid hooks/angles that flopped in recent videos — check the transcripts of low-performing content
+- Use Rose's actual words from high-performing videos as inspiration for promo copy (sounds more authentic)
+
 ## Marketing Rules (NON-NEGOTIABLE)
 1. NEVER be salesy or pushy — Rose's audience will unfollow if they feel sold to
 2. Always LEAD WITH VALUE first — the promo should feel like a natural extension of helpful content
