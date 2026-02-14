@@ -36,6 +36,10 @@ export class DiscordChannel implements Channel {
     this.client.on("messageCreate", async (message: Message) => {
       if (message.author.bot) return;
 
+      // Owner-only: only Rose can use this bot
+      const OWNER_ID = process.env.DISCORD_OWNER_ID || "975628031869726740";
+      if (message.author.id !== OWNER_ID) return;
+
       const isMentioned = message.mentions.has(this.client.user!);
       const isDM = !message.guild;
 
