@@ -168,33 +168,27 @@ export class YouTubeConnector implements PlatformConnector {
       });
       const html = await pageRes.text();
 
-      // Extract the full ytInitialPlayerResponse JSON from the page
-      const playerMatch = html.match(/ytInitialPlayerResponse\s*=\s*(\{.+?\})\s*;\s*(?:var\s|<\/script>)/s);
-      if (!playerMatch) return null;
+      // Extract caption track URL directly from the page HTML
+      // Look for the timedtext URL in the captions section
+      const captionMatch = html.match(/"captionTracks"\s*:\s*\[(.*?)\]/s);
+      if (!captionMatch) return null;
 
-      let playerData: Record<string, unknown>;
-      try {
-        playerData = JSON.parse(playerMatch[1]);
-      } catch {
-        return null;
+      // Find a baseUrl — prefer English
+      const urlMatches = [...captionMatch[1].matchAll(/"baseUrl"\s*:\s*"([^"]+)"/g)];
+      const langMatches = [...captionMatch[1].matchAll(/"languageCode"\s*:\s*"([^"]+)"/g)];
+
+      if (urlMatches.length === 0) return null;
+
+      // Pick English track if available, otherwise first track
+      let captionUrl = urlMatches[0][1];
+      for (let i = 0; i < langMatches.length && i < urlMatches.length; i++) {
+        if (langMatches[i][1].startsWith("en")) {
+          captionUrl = urlMatches[i][1];
+          break;
+        }
       }
 
-      // Navigate to captions tracks
-      const captions = playerData.captions as Record<string, unknown> | undefined;
-      if (!captions) return null;
-
-      const renderer = captions.playerCaptionsTracklistRenderer as Record<string, unknown> | undefined;
-      if (!renderer) return null;
-
-      const tracks = renderer.captionTracks as Array<Record<string, string>> | undefined;
-      if (!tracks || tracks.length === 0) return null;
-
-      // Prefer English, fall back to first available track
-      const enTrack = tracks.find((t) => t.languageCode === "en" || t.languageCode?.startsWith("en"));
-      const track = enTrack || tracks[0];
-      if (!track?.baseUrl) return null;
-
-      const captionUrl = track.baseUrl;
+      captionUrl = captionUrl.replace(/\\u0026/g, "&");
       const captionRes = await fetch(captionUrl);
       const xml = await captionRes.text();
 
@@ -273,6 +267,7 @@ export class YouTubeConnector implements PlatformConnector {
 
       let imported = 0;
       let shortsCount = 0;
+      let descriptionFallbacks = 0;
       const transcriptMap = new Map<string, string | null>();
 
       if (videoIds.length > 0) {
@@ -291,8 +286,6 @@ export class YouTubeConnector implements PlatformConnector {
           }
         });
         await Promise.all(transcriptPromises);
-
-        let descriptionFallbacks = 0;
 
         for (const item of detailItems) {
           const snippet = item.snippet as Record<string, string>;
