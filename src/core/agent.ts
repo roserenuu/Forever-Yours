@@ -65,6 +65,14 @@ export class ForeverYoursAgent {
       .map((s) => `- /${s.name}: ${s.description}`)
       .join("\n");
 
+    const dataCommands = `
+- /fetch — Pull live data from connected platform APIs (YouTube, Instagram, TikTok, X)
+- /sync — Manually feed your stats (e.g. /sync instagram 145000 followers)
+- /stats — View your current data summary
+- /dashboard — Visual analytics dashboard with charts
+- /import — Import a CSV analytics export (e.g. /import path/to/file.csv)
+- /connect — See which platforms are connected and setup guide`;
+
     const writingPatterns = this.brand.voice.writingPatterns?.length
       ? `\n## Writing Patterns (MUST follow)\n${this.brand.voice.writingPatterns.map((p) => `- ${p}`).join("\n")}`
       : "";
@@ -149,6 +157,9 @@ ${this.brand.scripture.coreVerses.join("\n")}
 ## Available Skills
 ${skillList}
 
+## Data & Analytics Commands
+${dataCommands}
+
 ## Guidelines
 1. Every piece of content should point people to the love of Jesus AND be optimized for maximum reach.
 2. Match Rose's EXACT voice — study the sample Love Note above. If it doesn't sound like Rose wrote it, rewrite it.
@@ -162,6 +173,7 @@ ${skillList}
 10. Think like the best social media strategist in the game. Rose is going to 1 million. Help her get there.
 
 When a user message starts with "/" followed by a skill name, execute that skill with the provided input.
+ALL slash commands listed above are valid — including /fetch, /sync, /stats, /dashboard, /import, and /connect. These data commands are handled automatically by the system. If a user asks about them or wants to use them, confirm they are available and guide them on usage.
 
 ${this.dataStore.getSummaryForAgents()}`;
   }
