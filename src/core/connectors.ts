@@ -153,6 +153,18 @@ export class YouTubeConnector implements PlatformConnector {
     return this.apiKey.length > 0 && this.channelId.length > 0;
   }
 
+  /**
+   * Parse ISO 8601 duration (e.g. "PT1M30S") into seconds.
+   */
+  private parseDuration(iso: string): number {
+    const match = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+    if (!match) return 0;
+    const hours = parseInt(match[1] || "0", 10);
+    const minutes = parseInt(match[2] || "0", 10);
+    const seconds = parseInt(match[3] || "0", 10);
+    return hours * 3600 + minutes * 60 + seconds;
+  }
+
   async fetchStats(): Promise<string> {
     if (!this.isConfigured()) {
       return "YouTube not connected. Set YOUTUBE_API_KEY and YOUTUBE_CHANNEL_ID in .env";
@@ -180,43 +192,54 @@ export class YouTubeConnector implements PlatformConnector {
         notes: `Total channel views: ${totalViews.toLocaleString()}`,
       });
 
-      // Fetch recent videos
+      // Fetch recent videos (up to 30 to capture enough Shorts)
       const videosRes = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${this.channelId}&maxResults=10&order=date&type=video&key=${this.apiKey}`
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${this.channelId}&maxResults=30&order=date&type=video&key=${this.apiKey}`
       );
       const videosData = (await videosRes.json()) as Record<string, unknown>;
       const videos = (videosData.items as Array<Record<string, unknown>>) || [];
 
+      // Batch video IDs to fetch stats + duration in one call (saves API quota)
+      const videoIds = videos
+        .map((v) => (v.id as Record<string, string>)?.videoId)
+        .filter(Boolean);
+
       let imported = 0;
-      for (const video of videos) {
-        const snippet = video.snippet as Record<string, string>;
-        const videoId = (video.id as Record<string, string>)?.videoId;
+      let shortsCount = 0;
 
-        if (videoId) {
-          const statsRes = await fetch(
-            `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${videoId}&key=${this.apiKey}`
-          );
-          const statsData = (await statsRes.json()) as Record<string, unknown>;
-          const videoItems = (statsData.items as Array<Record<string, unknown>>) || [];
+      if (videoIds.length > 0) {
+        const detailsRes = await fetch(
+          `https://www.googleapis.com/youtube/v3/videos?part=statistics,contentDetails,snippet&id=${videoIds.join(",")}&key=${this.apiKey}`
+        );
+        const detailsData = (await detailsRes.json()) as Record<string, unknown>;
+        const detailItems = (detailsData.items as Array<Record<string, unknown>>) || [];
 
-          if (videoItems.length > 0) {
-            const vStats = videoItems[0].statistics as Record<string, string>;
-            this.dataStore.addContent({
-              platform: "youtube",
-              contentType: "video",
-              topic: snippet.title || "untitled",
-              reach: parseInt(vStats.viewCount || "0", 10),
-              likes: parseInt(vStats.likeCount || "0", 10),
-              comments: parseInt(vStats.commentCount || "0", 10),
-              views: parseInt(vStats.viewCount || "0", 10),
-              postedAt: snippet.publishedAt,
-            });
-            imported++;
-          }
+        for (const item of detailItems) {
+          const snippet = item.snippet as Record<string, string>;
+          const vStats = item.statistics as Record<string, string>;
+          const contentDetails = item.contentDetails as Record<string, string>;
+
+          const durationSec = this.parseDuration(contentDetails?.duration || "");
+          const isShort = durationSec > 0 && durationSec <= 60;
+          const contentType = isShort ? "short" : "video";
+
+          if (isShort) shortsCount++;
+
+          this.dataStore.addContent({
+            platform: "youtube",
+            contentType,
+            topic: snippet.title || "untitled",
+            reach: parseInt(vStats.viewCount || "0", 10),
+            likes: parseInt(vStats.likeCount || "0", 10),
+            comments: parseInt(vStats.commentCount || "0", 10),
+            views: parseInt(vStats.viewCount || "0", 10),
+            postedAt: snippet.publishedAt,
+          });
+          imported++;
         }
       }
 
-      return `YouTube synced: ${subscribers.toLocaleString()} subscribers, ${imported} recent videos imported`;
+      return `YouTube synced: ${subscribers.toLocaleString()} subscribers, ${imported} recent videos imported (${shortsCount} Shorts, ${imported - shortsCount} long-form)`;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       return `YouTube fetch failed: ${message}`;

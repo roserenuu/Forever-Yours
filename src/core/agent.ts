@@ -66,7 +66,7 @@ export class ForeverYoursAgent {
       .join("\n");
 
     const dataCommands = `
-- /fetch — Pull live data from connected platform APIs (YouTube, Instagram, TikTok, X)
+- /fetch — Pull live data from connected platform APIs (YouTube, Instagram, TikTok, X). Use "/fetch youtube" to pull YouTube Shorts and video stats with view counts, likes, and comments. Shorts are automatically detected by duration.
 - /sync — Manually feed your stats (e.g. /sync instagram 145000 followers)
 - /stats — View your current data summary
 - /dashboard — Visual analytics dashboard with charts
