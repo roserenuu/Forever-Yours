@@ -25,6 +25,7 @@ export interface ContentPerformance {
   views?: number;
   watchTime?: string;
   postedAt?: string;
+  transcript?: string;
   notes?: string;
 }
 
@@ -208,6 +209,8 @@ export class DataStore {
         if (c.views) summary += ` | Views: ${c.views.toLocaleString()}`;
         if (c.comments)
           summary += ` | Comments: ${c.comments.toLocaleString()}`;
+        if (c.transcript)
+          summary += `\n  Transcript: ${c.transcript.slice(0, 300)}${c.transcript.length > 300 ? "..." : ""}`;
         summary += "\n";
       }
     }

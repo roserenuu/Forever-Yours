@@ -154,6 +154,52 @@ export class YouTubeConnector implements PlatformConnector {
   }
 
   /**
+   * Fetch transcript/captions for a YouTube video.
+   * Uses YouTube's public timedtext endpoint extracted from the video page.
+   * Returns the plain text transcript or null if unavailable.
+   */
+  private async fetchTranscript(videoId: string): Promise<string | null> {
+    try {
+      const pageRes = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
+        headers: { "Accept-Language": "en" },
+      });
+      const html = await pageRes.text();
+
+      // Extract captions player response from page
+      const captionMatch = html.match(/"captions":\s*(\{.*?"playerCaptionsTracklistRenderer".*?\})\s*,\s*"videoDetails"/s);
+      if (!captionMatch) return null;
+
+      // Find the caption track URL (prefer English, fall back to any)
+      const trackMatch = captionMatch[1].match(/"baseUrl"\s*:\s*"(https:\/\/www\.youtube\.com\/api\/timedtext[^"]*)"/);
+      if (!trackMatch) return null;
+
+      const captionUrl = trackMatch[1].replace(/\\u0026/g, "&");
+      const captionRes = await fetch(captionUrl);
+      const xml = await captionRes.text();
+
+      // Parse XML caption entries and strip tags
+      const lines: string[] = [];
+      const textRegex = /<text[^>]*>(.*?)<\/text>/gs;
+      let match: RegExpExecArray | null;
+      while ((match = textRegex.exec(xml)) !== null) {
+        const text = match[1]
+          .replace(/&amp;/g, "&")
+          .replace(/&lt;/g, "<")
+          .replace(/&gt;/g, ">")
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          .replace(/<[^>]+>/g, "")
+          .trim();
+        if (text) lines.push(text);
+      }
+
+      return lines.length > 0 ? lines.join(" ") : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Parse ISO 8601 duration (e.g. "PT1M30S") into seconds.
    */
   private parseDuration(iso: string): number {
@@ -206,6 +252,7 @@ export class YouTubeConnector implements PlatformConnector {
 
       let imported = 0;
       let shortsCount = 0;
+      const transcriptMap = new Map<string, string | null>();
 
       if (videoIds.length > 0) {
         const detailsRes = await fetch(
@@ -214,16 +261,29 @@ export class YouTubeConnector implements PlatformConnector {
         const detailsData = (await detailsRes.json()) as Record<string, unknown>;
         const detailItems = (detailsData.items as Array<Record<string, unknown>>) || [];
 
+        // Fetch transcripts in parallel for all videos
+        const transcriptPromises = detailItems.map(async (item) => {
+          const videoId = (item.id as string) || "";
+          if (videoId) {
+            const transcript = await this.fetchTranscript(videoId);
+            transcriptMap.set(videoId, transcript);
+          }
+        });
+        await Promise.all(transcriptPromises);
+
         for (const item of detailItems) {
           const snippet = item.snippet as Record<string, string>;
           const vStats = item.statistics as Record<string, string>;
           const contentDetails = item.contentDetails as Record<string, string>;
+          const videoId = (item.id as string) || "";
 
           const durationSec = this.parseDuration(contentDetails?.duration || "");
           const isShort = durationSec > 0 && durationSec <= 60;
           const contentType = isShort ? "short" : "video";
 
           if (isShort) shortsCount++;
+
+          const transcript = transcriptMap.get(videoId) || undefined;
 
           this.dataStore.addContent({
             platform: "youtube",
@@ -234,12 +294,14 @@ export class YouTubeConnector implements PlatformConnector {
             comments: parseInt(vStats.commentCount || "0", 10),
             views: parseInt(vStats.viewCount || "0", 10),
             postedAt: snippet.publishedAt,
+            transcript,
           });
           imported++;
         }
       }
 
-      return `YouTube synced: ${subscribers.toLocaleString()} subscribers, ${imported} recent videos imported (${shortsCount} Shorts, ${imported - shortsCount} long-form)`;
+      const withTranscripts = Array.from(transcriptMap.values()).filter(Boolean).length;
+      return `YouTube synced: ${subscribers.toLocaleString()} subscribers, ${imported} recent videos imported (${shortsCount} Shorts, ${imported - shortsCount} long-form, ${withTranscripts} transcripts loaded)`;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       return `YouTube fetch failed: ${message}`;
