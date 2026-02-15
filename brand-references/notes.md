@@ -5,6 +5,42 @@ Soft, minimal, faith-based motivational content with an elegant editorial feel. 
 
 ---
 
+## Instagram Carousel Specifications
+
+### Dimensions
+- **Size:** 1080 x 1440 pixels (4:5 ratio — Instagram's newest carousel format)
+- **Resolution:** High quality, always crisp and sharp
+- **Format:** PNG or JPG at maximum quality
+
+### Carousel Rules
+- **Slide count:** 3 to 8 slides per carousel (varies per message)
+- **Every slide must be different** — no two slides should look the same. Vary the layout, font style, background color, text size, or design pattern across slides.
+- **All slides must relate** — they tell one story, build one message, or unpack one theme. The carousel is a journey, not random quotes.
+- **Hook & flow** — each slide must make the viewer want to swipe to the next one:
+  - **Slide 1 (The Hook):** Bold, curiosity-driven, or emotionally striking. Stops the scroll. Can be a question, a powerful statement, or a visual pattern break.
+  - **Middle Slides (The Build):** Expand the message. Break up a longer thought across slides. Use variety — switch fonts, colors, layouts. Each slide reveals the next piece.
+  - **Final Slide (The Landing):** The resolution. A powerful closing statement, a call to action, or a truth that ties it all together. Leave them feeling something.
+- **Pacing:** Don't put too much text on one slide. Let each thought breathe. Short lines hit harder.
+- **Visual variety within unity:** Same color family but different shades. Same font family but different weights. Same vibe but different compositions.
+
+### Carousel Content Strategy
+- Break a Bible verse into pieces across slides
+- Tell a mini faith story slide by slide
+- Start with a relatable struggle, end with God's truth
+- Use "Part 1 / Part 2" style reveals
+- Open with a bold statement, then explain why
+- Repetition builds that grow in intensity (like the "god is with you." reference)
+
+### Quality Standards
+- Always high resolution (1080 x 1440px, no exceptions)
+- Clean typography with proper spacing and alignment
+- Consistent brand palette per carousel (don't use all colors at once)
+- Text must be readable — proper contrast between text and background
+- Generous whitespace — never cramped
+- Professional, editorial feel — like a page from a beautiful book
+
+---
+
 ## Color Palette
 
 ### Backgrounds
