@@ -1,4 +1,6 @@
 import { DataStore } from "./datastore.js";
+import { exec, execSync } from "child_process";
+import { readFileSync, unlinkSync } from "fs";
 
 /**
  * Base interface for all platform API connectors.
@@ -155,47 +157,139 @@ export class YouTubeConnector implements PlatformConnector {
 
   /**
    * Fetch transcript/captions for a YouTube video.
-   * Uses YouTube's Innertube API to reliably get captions server-side,
-   * then falls back to scraping the watch page HTML if needed.
-   * Returns the plain text transcript or null if unavailable.
+   * Tries multiple methods in order of reliability:
+   * 1. yt-dlp (most reliable, handles all anti-bot measures)
+   * 2. Innertube API with multiple client types
+   * 3. Page scraping as last resort
    */
   private async fetchTranscript(videoId: string): Promise<string | null> {
-    // Try Innertube API first (most reliable for server-side)
+    // Method 1: yt-dlp (most reliable)
     try {
-      const transcript = await this.fetchTranscriptViaInnertube(videoId);
-      if (transcript) return transcript;
-    } catch {
-      console.log(`[YouTube] Innertube failed for ${videoId}, trying page scrape...`);
+      const transcript = await this.fetchTranscriptViaYtdlp(videoId);
+      if (transcript) {
+        console.log(`[YouTube] Got transcript via yt-dlp for ${videoId}`);
+        return transcript;
+      }
+    } catch (err) {
+      console.log(`[YouTube] yt-dlp failed for ${videoId}: ${err instanceof Error ? err.message : err}`);
     }
 
-    // Fallback: scrape the watch page HTML
+    // Method 2: Innertube API (try multiple client types)
+    const clients = [
+      { clientName: "ANDROID", clientVersion: "19.29.37", userAgent: "com.google.android.youtube/19.29.37" },
+      { clientName: "WEB", clientVersion: "2.20241126.01.00", userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" },
+      { clientName: "TVHTML5_SIMPLY_EMBEDDED_PLAYER", clientVersion: "2.0", userAgent: "Mozilla/5.0" },
+    ];
+
+    for (const client of clients) {
+      try {
+        const transcript = await this.fetchTranscriptViaInnertube(videoId, client);
+        if (transcript) {
+          console.log(`[YouTube] Got transcript via Innertube (${client.clientName}) for ${videoId}`);
+          return transcript;
+        }
+      } catch {
+        // Try next client
+      }
+    }
+
+    // Method 3: Page scrape (last resort)
     try {
       const transcript = await this.fetchTranscriptViaPageScrape(videoId);
-      if (transcript) return transcript;
+      if (transcript) {
+        console.log(`[YouTube] Got transcript via page scrape for ${videoId}`);
+        return transcript;
+      }
     } catch {
-      console.log(`[YouTube] Page scrape also failed for ${videoId}`);
+      // Fall through
     }
 
+    console.log(`[YouTube] All transcript methods failed for ${videoId}`);
     return null;
   }
 
   /**
-   * Fetch captions via YouTube's Innertube API (internal YouTube API).
-   * This bypasses bot detection since it uses the same API the web player uses.
+   * Fetch captions using yt-dlp CLI tool (most reliable method).
+   * yt-dlp handles all of YouTube's anti-bot measures.
    */
-  private async fetchTranscriptViaInnertube(videoId: string): Promise<string | null> {
-    // Step 1: Get video player response to find caption tracks
+  private async fetchTranscriptViaYtdlp(videoId: string): Promise<string | null> {
+    return new Promise((resolve) => {
+      const safeId = videoId.replace(/[^a-zA-Z0-9_-]/g, "");
+      const cmd = `yt-dlp --skip-download --write-auto-sub --write-sub --sub-lang "en.*,en" --sub-format json3 -o "/tmp/yt-${safeId}" "https://www.youtube.com/watch?v=${safeId}" 2>&1`;
+
+      exec(cmd, { timeout: 30000 }, (error, stdout) => {
+        if (error) {
+          if (stdout?.includes("command not found") || stdout?.includes("not recognized") || error.message?.includes("ENOENT")) {
+            console.log("[YouTube] yt-dlp not installed, skipping");
+          }
+          resolve(null);
+          return;
+        }
+
+        // Find and read the subtitle file
+        try {
+          const files = execSync(`ls /tmp/yt-${safeId}*.json3 2>/dev/null`).toString().trim().split("\n");
+          if (files.length > 0 && files[0]) {
+            const content = readFileSync(files[0], "utf-8");
+            const json = JSON.parse(content);
+            const lines: string[] = [];
+            if (json.events) {
+              for (const event of json.events) {
+                if (event.segs) {
+                  const text = event.segs.map((s: { utf8: string }) => s.utf8 || "").join("").trim();
+                  if (text && text !== "\n") lines.push(text);
+                }
+              }
+            }
+            // Cleanup temp files
+            try { execSync(`rm -f /tmp/yt-${safeId}*`); } catch { /* ignore */ }
+            resolve(lines.length > 0 ? lines.join(" ") : null);
+            return;
+          }
+        } catch {
+          // json3 not found, try SRT/VTT
+        }
+
+        try {
+          const files = execSync(`ls /tmp/yt-${safeId}*.srt /tmp/yt-${safeId}*.vtt 2>/dev/null`).toString().trim().split("\n");
+          if (files.length > 0 && files[0]) {
+            const content = readFileSync(files[0], "utf-8");
+            const text = content
+              .replace(/^\d+\s*$/gm, "")
+              .replace(/\d{2}:\d{2}:\d{2}[.,]\d{3}\s*-->\s*\d{2}:\d{2}:\d{2}[.,]\d{3}/g, "")
+              .replace(/WEBVTT.*$/gm, "")
+              .replace(/<[^>]+>/g, "")
+              .replace(/\n{2,}/g, " ")
+              .trim();
+            try { execSync(`rm -f /tmp/yt-${safeId}*`); } catch { /* ignore */ }
+            resolve(text.length > 0 ? text : null);
+            return;
+          }
+        } catch { /* ignore */ }
+
+        resolve(null);
+      });
+    });
+  }
+
+  /**
+   * Fetch captions via YouTube's Innertube API with configurable client type.
+   */
+  private async fetchTranscriptViaInnertube(
+    videoId: string,
+    client: { clientName: string; clientVersion: string; userAgent: string }
+  ): Promise<string | null> {
     const playerRes = await fetch("https://www.youtube.com/youtubei/v1/player", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "User-Agent": client.userAgent,
       },
       body: JSON.stringify({
         context: {
           client: {
-            clientName: "WEB",
-            clientVersion: "2.20240101.00.00",
+            clientName: client.clientName,
+            clientVersion: client.clientVersion,
             hl: "en",
           },
         },
@@ -204,23 +298,21 @@ export class YouTubeConnector implements PlatformConnector {
     });
 
     const playerData = (await playerRes.json()) as Record<string, unknown>;
-    const captions = playerData.captions as Record<string, unknown> | undefined;
-    if (!captions) {
-      console.log(`[YouTube] No captions object for ${videoId}`);
-      return null;
+
+    // Log playability status for debugging
+    const playability = playerData.playabilityStatus as Record<string, string> | undefined;
+    if (playability?.status && playability.status !== "OK") {
+      console.log(`[YouTube] Innertube ${client.clientName}: playability=${playability.status} for ${videoId}`);
     }
+
+    const captions = playerData.captions as Record<string, unknown> | undefined;
+    if (!captions) return null;
 
     const renderer = captions.playerCaptionsTracklistRenderer as Record<string, unknown> | undefined;
-    if (!renderer) {
-      console.log(`[YouTube] No caption renderer for ${videoId}`);
-      return null;
-    }
+    if (!renderer) return null;
 
     const captionTracks = renderer.captionTracks as Array<Record<string, string>> | undefined;
-    if (!captionTracks || captionTracks.length === 0) {
-      console.log(`[YouTube] No caption tracks for ${videoId}`);
-      return null;
-    }
+    if (!captionTracks || captionTracks.length === 0) return null;
 
     // Pick English track if available, otherwise first track
     let track = captionTracks[0];
@@ -234,7 +326,7 @@ export class YouTubeConnector implements PlatformConnector {
     let captionUrl = track.baseUrl;
     if (!captionUrl) return null;
 
-    // Fetch the XML captions
+    captionUrl = captionUrl.replace(/\\u0026/g, "&");
     const captionRes = await fetch(captionUrl);
     const xml = await captionRes.text();
     return this.parseXmlCaptions(xml);
@@ -247,19 +339,47 @@ export class YouTubeConnector implements PlatformConnector {
     const pageRes = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
       headers: {
         "Accept-Language": "en",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
       },
     });
     const html = await pageRes.text();
 
-    const captionMatch = html.match(/"captionTracks"\s*:\s*\[(.*?)\]/s);
-    if (!captionMatch) {
-      console.log(`[YouTube] No captionTracks in page HTML for ${videoId}`);
+    // Try multiple regex patterns for caption data
+    let captionJson: string | null = null;
+
+    // Pattern 1: captionTracks array
+    const match1 = html.match(/"captionTracks"\s*:\s*(\[.*?\])/s);
+    if (match1) captionJson = match1[1];
+
+    // Pattern 2: Look in ytInitialPlayerResponse
+    if (!captionJson) {
+      const playerMatch = html.match(/ytInitialPlayerResponse\s*=\s*(\{.*?\});\s*(?:var|<\/script>)/s);
+      if (playerMatch) {
+        try {
+          const playerData = JSON.parse(playerMatch[1]);
+          const tracks = playerData?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+          if (tracks?.length > 0) {
+            let track = tracks[0];
+            for (const t of tracks) {
+              if (t.languageCode?.startsWith("en")) { track = t; break; }
+            }
+            if (track.baseUrl) {
+              const captionRes = await fetch(track.baseUrl.replace(/\\u0026/g, "&"));
+              const xml = await captionRes.text();
+              return this.parseXmlCaptions(xml);
+            }
+          }
+        } catch { /* JSON parse failed, continue */ }
+      }
+    }
+
+    if (!captionJson) {
+      console.log(`[YouTube] No captionTracks in page HTML for ${videoId} (HTML length: ${html.length})`);
       return null;
     }
 
-    const urlMatches = [...captionMatch[1].matchAll(/"baseUrl"\s*:\s*"([^"]+)"/g)];
-    const langMatches = [...captionMatch[1].matchAll(/"languageCode"\s*:\s*"([^"]+)"/g)];
+    const urlMatches = [...captionJson.matchAll(/"baseUrl"\s*:\s*"([^"]+)"/g)];
+    const langMatches = [...captionJson.matchAll(/"languageCode"\s*:\s*"([^"]+)"/g)];
 
     if (urlMatches.length === 0) return null;
 
