@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { createCanvas, CanvasRenderingContext2D } from "canvas";
+import { createCanvas, registerFont, CanvasRenderingContext2D } from "canvas";
 import * as fs from "fs";
 import * as path from "path";
 import { BrandConfig } from "../config/brand.js";
@@ -21,12 +21,59 @@ const BRAND_COLORS = {
   scriptureGold: "#C4956A",
 };
 
-// Font stacks (system fonts that look good)
+// Custom font directory — drop .ttf or .otf files here
+const FONTS_DIR = path.join(process.cwd(), "fonts");
+
+// Default brand font — Boston Angel Medium
+const BRAND_FONT = "Boston Angel";
+const FALLBACK_FONT = "Georgia";
+
+// Register custom fonts from fonts/ directory
+function loadCustomFonts(): boolean {
+  if (!fs.existsSync(FONTS_DIR)) {
+    fs.mkdirSync(FONTS_DIR, { recursive: true });
+    return false;
+  }
+
+  let loaded = false;
+  const fontFiles = fs.readdirSync(FONTS_DIR).filter(
+    (f) => f.endsWith(".ttf") || f.endsWith(".otf") || f.endsWith(".woff")
+  );
+
+  for (const file of fontFiles) {
+    const fontPath = path.join(FONTS_DIR, file);
+    const name = file.replace(/\.(ttf|otf|woff)$/, "");
+
+    // Detect weight/style from filename
+    const isItalic = /italic/i.test(name);
+    const isBold = /bold/i.test(name);
+    const weight = isBold ? "bold" : "normal";
+    const style = isItalic ? "italic" : "normal";
+
+    // Use the brand font family name for Boston Angel variants
+    const family = /boston.?angel/i.test(name) ? BRAND_FONT : name;
+
+    try {
+      registerFont(fontPath, { family, weight, style });
+      console.log(`  [Iris] Loaded font: ${family} (${weight} ${style}) from ${file}`);
+      loaded = true;
+    } catch (err) {
+      console.log(`  [Iris] Warning: Could not load font ${file}`);
+    }
+  }
+
+  return loaded;
+}
+
+// Try to load custom fonts at startup
+const hasCustomFonts = loadCustomFonts();
+
+// Font configuration — uses Boston Angel if available, falls back to Georgia
 const FONTS = {
-  heading: "Georgia",
-  body: "Georgia",
-  scripture: "Georgia",
-  accent: "Arial",
+  heading: hasCustomFonts ? BRAND_FONT : FALLBACK_FONT,
+  body: hasCustomFonts ? BRAND_FONT : FALLBACK_FONT,
+  scripture: hasCustomFonts ? BRAND_FONT : FALLBACK_FONT,
+  accent: hasCustomFonts ? BRAND_FONT : FALLBACK_FONT,
 };
 
 export interface DesignRequest {
@@ -60,6 +107,11 @@ export class DesignerAgent {
     // Ensure output directory exists
     if (!fs.existsSync(OUTPUT_DIR)) {
       fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+    }
+
+    if (!hasCustomFonts) {
+      console.log(`  [Iris] No custom fonts found. Using ${FALLBACK_FONT} as fallback.`);
+      console.log(`  [Iris] To use Boston Angel Medium: drop the .ttf/.otf file into the fonts/ folder.`);
     }
   }
 
