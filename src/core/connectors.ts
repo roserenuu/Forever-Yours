@@ -1,6 +1,8 @@
 import { DataStore } from "./datastore.js";
 import { exec, execSync } from "child_process";
-import { readFileSync, unlinkSync } from "fs";
+import { readFileSync } from "fs";
+import { tmpdir } from "os";
+import { join } from "path";
 
 /**
  * Base interface for all platform API connectors.
@@ -215,57 +217,67 @@ export class YouTubeConnector implements PlatformConnector {
   private async fetchTranscriptViaYtdlp(videoId: string): Promise<string | null> {
     return new Promise((resolve) => {
       const safeId = videoId.replace(/[^a-zA-Z0-9_-]/g, "");
-      const cmd = `yt-dlp --skip-download --write-auto-sub --write-sub --sub-lang "en.*,en" --sub-format json3 -o "/tmp/yt-${safeId}" "https://www.youtube.com/watch?v=${safeId}" 2>&1`;
+      const tempBase = join(tmpdir(), `yt-${safeId}`);
+      const cmd = `yt-dlp --skip-download --write-auto-sub --write-sub --sub-lang "en.*,en" --sub-format json3 -o "${tempBase}" "https://www.youtube.com/watch?v=${safeId}"`;
 
-      exec(cmd, { timeout: 30000 }, (error, stdout) => {
+      exec(cmd, { timeout: 45000 }, (error, stdout, stderr) => {
+        const output = (stdout || "") + (stderr || "");
         if (error) {
-          if (stdout?.includes("command not found") || stdout?.includes("not recognized") || error.message?.includes("ENOENT")) {
+          if (output.includes("not recognized") || output.includes("command not found") || error.message?.includes("ENOENT")) {
             console.log("[YouTube] yt-dlp not installed, skipping");
+          } else {
+            console.log(`[YouTube] yt-dlp error for ${safeId}: ${output.split("\n").pop()}`);
           }
-          resolve(null);
-          return;
+          // Still check if subtitle file was written despite error
         }
 
-        // Find and read the subtitle file
+        // Try to find and read the subtitle file (json3 format)
+        const { readdirSync } = require("fs");
+        const tempDir = tmpdir();
         try {
-          const files = execSync(`ls /tmp/yt-${safeId}*.json3 2>/dev/null`).toString().trim().split("\n");
-          if (files.length > 0 && files[0]) {
-            const content = readFileSync(files[0], "utf-8");
-            const json = JSON.parse(content);
-            const lines: string[] = [];
-            if (json.events) {
-              for (const event of json.events) {
-                if (event.segs) {
-                  const text = event.segs.map((s: { utf8: string }) => s.utf8 || "").join("").trim();
-                  if (text && text !== "\n") lines.push(text);
+          const allFiles = readdirSync(tempDir) as string[];
+          const subFiles = allFiles.filter((f: string) => f.startsWith(`yt-${safeId}`) && (f.endsWith(".json3") || f.endsWith(".srt") || f.endsWith(".vtt")));
+
+          for (const file of subFiles) {
+            const filePath = join(tempDir, file);
+            try {
+              const content = readFileSync(filePath, "utf-8");
+
+              if (file.endsWith(".json3")) {
+                const json = JSON.parse(content);
+                const lines: string[] = [];
+                if (json.events) {
+                  for (const event of json.events) {
+                    if (event.segs) {
+                      const text = event.segs.map((s: { utf8: string }) => s.utf8 || "").join("").trim();
+                      if (text && text !== "\n") lines.push(text);
+                    }
+                  }
+                }
+                // Cleanup
+                try { require("fs").unlinkSync(filePath); } catch { /* ignore */ }
+                if (lines.length > 0) {
+                  resolve(lines.join(" "));
+                  return;
+                }
+              } else {
+                // SRT/VTT format
+                const text = content
+                  .replace(/^\d+\s*$/gm, "")
+                  .replace(/\d{2}:\d{2}:\d{2}[.,]\d{3}\s*-->\s*\d{2}:\d{2}:\d{2}[.,]\d{3}/g, "")
+                  .replace(/WEBVTT.*$/gm, "")
+                  .replace(/<[^>]+>/g, "")
+                  .replace(/\n{2,}/g, " ")
+                  .trim();
+                try { require("fs").unlinkSync(filePath); } catch { /* ignore */ }
+                if (text.length > 0) {
+                  resolve(text);
+                  return;
                 }
               }
-            }
-            // Cleanup temp files
-            try { execSync(`rm -f /tmp/yt-${safeId}*`); } catch { /* ignore */ }
-            resolve(lines.length > 0 ? lines.join(" ") : null);
-            return;
+            } catch { /* skip this file */ }
           }
-        } catch {
-          // json3 not found, try SRT/VTT
-        }
-
-        try {
-          const files = execSync(`ls /tmp/yt-${safeId}*.srt /tmp/yt-${safeId}*.vtt 2>/dev/null`).toString().trim().split("\n");
-          if (files.length > 0 && files[0]) {
-            const content = readFileSync(files[0], "utf-8");
-            const text = content
-              .replace(/^\d+\s*$/gm, "")
-              .replace(/\d{2}:\d{2}:\d{2}[.,]\d{3}\s*-->\s*\d{2}:\d{2}:\d{2}[.,]\d{3}/g, "")
-              .replace(/WEBVTT.*$/gm, "")
-              .replace(/<[^>]+>/g, "")
-              .replace(/\n{2,}/g, " ")
-              .trim();
-            try { execSync(`rm -f /tmp/yt-${safeId}*`); } catch { /* ignore */ }
-            resolve(text.length > 0 ? text : null);
-            return;
-          }
-        } catch { /* ignore */ }
+        } catch { /* ignore dir read error */ }
 
         resolve(null);
       });
@@ -481,15 +493,18 @@ export class YouTubeConnector implements PlatformConnector {
         const detailsData = (await detailsRes.json()) as Record<string, unknown>;
         const detailItems = (detailsData.items as Array<Record<string, unknown>>) || [];
 
-        // Fetch transcripts in parallel for all videos
-        const transcriptPromises = detailItems.map(async (item) => {
+        // Fetch transcripts sequentially with delays to avoid YouTube 429 rate limits
+        for (const item of detailItems) {
           const videoId = (item.id as string) || "";
           if (videoId) {
             const transcript = await this.fetchTranscript(videoId);
             transcriptMap.set(videoId, transcript);
+            // Small delay between requests to avoid rate limiting
+            if (transcriptMap.size < detailItems.length) {
+              await new Promise((r) => setTimeout(r, 1500));
+            }
           }
-        });
-        await Promise.all(transcriptPromises);
+        }
 
         for (const item of detailItems) {
           const snippet = item.snippet as Record<string, string>;
