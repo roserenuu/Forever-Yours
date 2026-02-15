@@ -12,6 +12,7 @@ async function main() {
   console.log("  │  Eden (Creator) · Selah (QA) · Mara (Scheduler)             │");
   console.log("  │  Zion (Marketing) · Navi (Analytics) · Adara (Ads)          │");
   console.log("  │  Lyra (Email) · Kaia (Community) · Nova (Partnerships)      │");
+  console.log("  │  Iris (Designer)                                            │");
   console.log("  │  You are seen. You are loved. You are His.                  │");
   console.log("  └─────────────────────────────────────────────────────────────┘");
   console.log("");
@@ -35,6 +36,7 @@ async function main() {
   console.log("    /emails    — Lyra builds email sequences and newsletters");
   console.log("    /community — Kaia manages engagement, DMs, and community growth");
   console.log("    /partners  — Nova handles brand deals, collabs, and sponsorships");
+  console.log("    /design    — Iris creates PNG graphics (carousels, quotes, stories)");
   console.log("");
   console.log("  Data commands:");
   console.log("    /dashboard — Visual analytics dashboard");

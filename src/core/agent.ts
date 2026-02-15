@@ -9,6 +9,7 @@ import { AdCopyAgent } from "./ad-copy.js";
 import { EmailMarketingAgent } from "./email-marketing.js";
 import { CommunityAgent } from "./community.js";
 import { PartnershipsAgent } from "./partnerships.js";
+import { DesignerAgent } from "./designer.js";
 import { DataStore } from "./datastore.js";
 import { CsvImporter } from "./csv-import.js";
 import { ConnectorManager } from "./connectors.js";
@@ -41,6 +42,7 @@ export class ForeverYoursAgent {
   private emailMarketing: EmailMarketingAgent;
   private community: CommunityAgent;
   private partnerships: PartnershipsAgent;
+  private designer: DesignerAgent;
   private dataStore: DataStore;
   private csvImporter: CsvImporter;
   private connectors: ConnectorManager;
@@ -62,6 +64,7 @@ export class ForeverYoursAgent {
     this.emailMarketing = new EmailMarketingAgent(this.brand, this.model);
     this.community = new CommunityAgent(this.brand, this.model);
     this.partnerships = new PartnershipsAgent(this.brand, this.model);
+    this.designer = new DesignerAgent(this.brand, this.model);
     this.dataStore = new DataStore();
     this.csvImporter = new CsvImporter(this.dataStore);
     this.connectors = new ConnectorManager(this.dataStore);
@@ -129,7 +132,8 @@ You are Eden — Rose's personal content machine. When she asks for content, giv
 - **Lyra** (Email Marketing) — builds email sequences, newsletters, automations, and list-building strategies. Rose uses /emails to talk to her.
 - **Kaia** (Community Manager) — manages DM responses, comment strategy, follower relationships, and community growth. Rose uses /community to talk to her.
 - **Nova** (Partnerships) — handles brand deals, creator collabs, sponsorships, and strategic partnerships. Rose uses /partners to talk to her.
-You handle all creative content. If Rose asks about scheduling, remind her to use /schedule. If she asks about organic product promos, remind her to use /promote. If she asks about paid ads, remind her to use /ads. If she asks about email marketing or newsletters, remind her to use /emails. If she asks about community engagement or DMs, remind her to use /community. If she asks about brand deals or collabs, remind her to use /partners. If she asks about what's working or analytics, remind her to use /insights.
+- **Iris** (Visual Designer) — creates actual PNG graphics: carousels, quote graphics, story slides, thumbnails. Rose uses /design to talk to her. Files are saved to the designs/ folder ready to upload.
+You handle all creative content. If Rose asks about scheduling, remind her to use /schedule. If she asks about organic product promos, remind her to use /promote. If she asks about paid ads, remind her to use /ads. If she asks about email marketing or newsletters, remind her to use /emails. If she asks about community engagement or DMs, remind her to use /community. If she asks about brand deals or collabs, remind her to use /partners. If she asks about what's working or analytics, remind her to use /insights. If she asks about creating graphics, images, or designs, remind her to use /design.
 
 ## Rose Renuu's Voice — Study This Carefully
 Rose writes Love Notes as if God Himself is speaking directly to one person — His child. Her writing is:
@@ -372,6 +376,16 @@ ${this.dataStore.getDirectiveForAgent("eden")}`;
         return `**Nova's Partnership Strategy**\n\n${partnership}`;
       }
 
+      // Iris (Designer) handles /design — creates actual PNG graphics
+      if (skillName === "design") {
+        console.log("[Iris] Designing your graphics...");
+        const result = await this.designer.design(
+          skillInput.trim() || "Create a Love Note quote graphic for Instagram"
+        );
+        console.log("[Iris] Graphics ready — check the designs/ folder.");
+        return result;
+      }
+
       // Eden handles all other skills
       const skill = this.skills.get(skillName);
       if (skill) {
@@ -438,6 +452,7 @@ ${this.dataStore.getDirectiveForAgent("eden")}`;
       lyra: extractDirective("Lyra"),
       kaia: extractDirective("Kaia"),
       nova: extractDirective("Nova"),
+      iris: extractDirective("Iris"),
       updatedAt: new Date().toISOString(),
     };
 
@@ -477,6 +492,7 @@ ${this.dataStore.getDirectiveForAgent("eden")}`;
     this.emailMarketing.clearHistory();
     this.community.clearHistory();
     this.partnerships.clearHistory();
+    this.designer.clearHistory();
   }
 
   getBrand(): BrandConfig {

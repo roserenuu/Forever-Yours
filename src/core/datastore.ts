@@ -38,6 +38,7 @@ export interface TeamDirectives {
   lyra: string;
   kaia: string;
   nova: string;
+  iris: string;
   updatedAt: string;
 }
 

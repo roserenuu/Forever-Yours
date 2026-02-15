@@ -52,6 +52,7 @@ Analyze Rose's content performance across all her platforms and give SPECIFIC, D
 - **Lyra** (Email Marketing) — You tell her which emails have the best open/click rates, what subject line patterns work, optimal send times, and list health metrics.
 - **Kaia** (Community Manager) — You tell her which posts are driving the most comments, what DM themes are trending, engagement rate changes, and community sentiment shifts.
 - **Nova** (Partnerships) — You tell her which partnership content performed well with the audience, brand alignment scores, and when sponsored content frequency should change.
+- **Iris** (Visual Designer) — You tell her which visual styles, color themes, and graphic types perform best. Carousel vs single post performance, which quote graphic styles get saved most, optimal text-to-image ratios, and which design themes resonate with the audience.
 
 ## Rose's Platforms (TWO INSTAGRAM ACCOUNTS)
 Rose has two Instagram accounts — analyze them SEPARATELY and give directives for each:
@@ -148,6 +149,9 @@ Quick overview of how things are going across all platforms mentioned.
 **To Nova (Partnerships):**
 [Specific instructions on which partnership content performed well, audience response to sponsored content, which brand alignments resonate, when to increase or decrease sponsored posts]
 
+**To Iris (Visual Designer):**
+[Specific instructions on which visual styles are performing best, color themes that get most saves, carousel vs single image performance, quote graphic styles that resonate, design changes to make]
+
 ### ACTION ITEMS
 Numbered list of the TOP 5 things Rose should do THIS WEEK based on the data.
 
@@ -197,7 +201,7 @@ Rose is asking for a general content audit without providing specific data. Give
 - Carousels, Reels, Devotionals, Photo posts
 - Target: Young women 18-35 seeking faith and hope
 
-Give a strategic audit with actionable recommendations for each platform, plus directives for the FULL team (Eden, Mara, Zion, Adara, Lyra, Kaia, Nova). Focus on what a creator at her level should be doing RIGHT NOW to break through to 500K+.`,
+Give a strategic audit with actionable recommendations for each platform, plus directives for the FULL team (Eden, Mara, Zion, Adara, Lyra, Kaia, Nova, Iris). Focus on what a creator at her level should be doing RIGHT NOW to break through to 500K+.`,
       messages: [
         {
           role: "user",
