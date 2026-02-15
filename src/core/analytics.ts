@@ -197,7 +197,7 @@ Rose is asking for a general content audit without providing specific data. Give
 - Carousels, Reels, Devotionals, Photo posts
 - Target: Young women 18-35 seeking faith and hope
 
-Give a strategic audit with actionable recommendations for each platform, plus directives for the team (Eden, Mara, Zion). Focus on what a creator at her level should be doing RIGHT NOW to break through to 500K+.`,
+Give a strategic audit with actionable recommendations for each platform, plus directives for the FULL team (Eden, Mara, Zion, Adara, Lyra, Kaia, Nova). Focus on what a creator at her level should be doing RIGHT NOW to break through to 500K+.`,
       messages: [
         {
           role: "user",

@@ -29,10 +29,23 @@ export interface ContentPerformance {
   notes?: string;
 }
 
+export interface TeamDirectives {
+  fullReport: string;
+  eden: string;
+  mara: string;
+  zion: string;
+  adara: string;
+  lyra: string;
+  kaia: string;
+  nova: string;
+  updatedAt: string;
+}
+
 export interface BrandData {
   platforms: Record<string, PlatformSnapshot>;
   recentContent: ContentPerformance[];
   goals: string[];
+  teamDirectives?: TeamDirectives;
   lastSyncedAt: string;
 }
 
@@ -247,6 +260,43 @@ export class DataStore {
 
     summary += `\nLast synced: ${this.data.lastSyncedAt.split("T")[0]}`;
     return summary;
+  }
+
+  // --- Navi's Team Directives ---
+
+  saveTeamDirectives(directives: TeamDirectives): void {
+    this.data.teamDirectives = directives;
+    this.save();
+  }
+
+  getTeamDirectives(): TeamDirectives | undefined {
+    return this.data.teamDirectives;
+  }
+
+  /**
+   * Get Navi's latest directive for a specific agent.
+   * Returns a formatted string that can be injected into any agent's context.
+   */
+  getDirectiveForAgent(agentName: string): string {
+    const directives = this.data.teamDirectives;
+    if (!directives) return "";
+
+    const key = agentName.toLowerCase() as keyof Omit<TeamDirectives, "fullReport" | "updatedAt">;
+    const directive = directives[key];
+    if (!directive) return "";
+
+    return `\n## Navi's Latest Directive for You (${directives.updatedAt.split("T")[0]})\nNavi analyzed Rose's data and gave you these specific instructions. FOLLOW THEM:\n${directive}\n`;
+  }
+
+  /**
+   * Get a summary of Navi's latest insights for the whole team.
+   * Shorter than the full report — just the key takeaways.
+   */
+  getNaviSummaryForTeam(): string {
+    const directives = this.data.teamDirectives;
+    if (!directives) return "";
+
+    return `\n## Navi's Latest Insights (${directives.updatedAt.split("T")[0]})\n${directives.fullReport.slice(0, 1500)}${directives.fullReport.length > 1500 ? "\n..." : ""}\n`;
   }
 
   // --- Bulk sync (for /sync command) ---

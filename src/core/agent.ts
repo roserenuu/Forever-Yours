@@ -201,7 +201,9 @@ ALL slash commands listed above are valid — including /fetch, /sync, /stats, /
 
 ${this.dataStore.getSummaryForAgents()}
 
-${this.dataStore.getTranscriptBrief()}`;
+${this.dataStore.getTranscriptBrief()}
+
+${this.dataStore.getDirectiveForAgent("eden")}`;
   }
 
   async chat(userMessage: string): Promise<string> {
@@ -262,14 +264,13 @@ ${this.dataStore.getTranscriptBrief()}`;
         return `${status}\n\n---\n\n${guide}`;
       }
 
-      // Mara (Scheduler) handles /schedule — inject live data + transcripts
+      // Mara (Scheduler) handles /schedule — inject live data + transcripts + Navi's directives
       if (skillName === "schedule") {
         console.log("[Mara] Planning your content calendar...");
         const dataContext = this.dataStore.getSummaryForAgents();
         const transcriptBrief = this.dataStore.getTranscriptBrief();
-        const fullContext = transcriptBrief
-          ? `${dataContext}\n\n${transcriptBrief}`
-          : dataContext;
+        const naviDirective = this.dataStore.getDirectiveForAgent("mara");
+        const fullContext = [dataContext, transcriptBrief, naviDirective].filter(Boolean).join("\n\n");
         const plan = await this.scheduler.planWeek(
           `${skillInput.trim()}\n\n${fullContext}`
         );
@@ -285,29 +286,31 @@ ${this.dataStore.getTranscriptBrief()}`;
           ? `${dataContext}\n\n${transcriptBrief}`
           : dataContext;
         const input = skillInput.trim();
+        let insights: string;
         if (input) {
           console.log("[Navi] Analyzing your data + transcripts...");
-          const insights = await this.analytics.analyze(
+          insights = await this.analytics.analyze(
             `${input}\n\n${fullContext}`
           );
-          console.log("[Navi] Insights ready — sending to Rose + team.");
-          return `**Navi's Insights Report**\n\n${insights}`;
         } else {
           console.log("[Navi] Analyzing live dashboard data + transcripts...");
-          const insights = await this.analytics.analyze(fullContext);
-          console.log("[Navi] Insights ready — sending to Rose + team.");
-          return `**Navi's Insights Report**\n\n${insights}`;
+          insights = await this.analytics.analyze(fullContext);
         }
+
+        // Parse and save Navi's directives so all agents can read them
+        this.saveNaviDirectives(insights);
+        console.log("[Navi] Insights saved — all agents now have updated directives.");
+
+        return `**Navi's Insights Report**\n\n${insights}`;
       }
 
-      // Zion (Marketing) handles /promote — inject live data + transcripts
+      // Zion (Marketing) handles /promote — inject live data + transcripts + Navi's directives
       if (skillName === "promote") {
         console.log("[Zion] Crafting your marketing content...");
         const dataContext = this.dataStore.getSummaryForAgents();
         const transcriptBrief = this.dataStore.getTranscriptBrief();
-        const fullContext = transcriptBrief
-          ? `${dataContext}\n\n${transcriptBrief}`
-          : dataContext;
+        const naviDirective = this.dataStore.getDirectiveForAgent("zion");
+        const fullContext = [dataContext, transcriptBrief, naviDirective].filter(Boolean).join("\n\n");
         const promo = await this.marketer.promote(
           `${skillInput.trim() || "Forever Yours devotional book"}\n\n${fullContext}`
         );
@@ -315,14 +318,13 @@ ${this.dataStore.getTranscriptBrief()}`;
         return `**Zion's Marketing Plan**\n\n${promo}`;
       }
 
-      // Adara (Ad Copy) handles /ads — inject live data + transcripts
+      // Adara (Ad Copy) handles /ads — inject live data + transcripts + Navi's directives
       if (skillName === "ads") {
         console.log("[Adara] Creating your ad campaign...");
         const dataContext = this.dataStore.getSummaryForAgents();
         const transcriptBrief = this.dataStore.getTranscriptBrief();
-        const fullContext = transcriptBrief
-          ? `${dataContext}\n\n${transcriptBrief}`
-          : dataContext;
+        const naviDirective = this.dataStore.getDirectiveForAgent("adara");
+        const fullContext = [dataContext, transcriptBrief, naviDirective].filter(Boolean).join("\n\n");
         const ad = await this.adCopy.createAd(
           `${skillInput.trim() || "Forever Yours devotional book — drive sales"}\n\n${fullContext}`
         );
@@ -330,14 +332,13 @@ ${this.dataStore.getTranscriptBrief()}`;
         return `**Adara's Ad Campaign**\n\n${ad}`;
       }
 
-      // Lyra (Email Marketing) handles /emails — inject live data + transcripts
+      // Lyra (Email Marketing) handles /emails — inject live data + transcripts + Navi's directives
       if (skillName === "emails") {
         console.log("[Lyra] Building your email content...");
         const dataContext = this.dataStore.getSummaryForAgents();
         const transcriptBrief = this.dataStore.getTranscriptBrief();
-        const fullContext = transcriptBrief
-          ? `${dataContext}\n\n${transcriptBrief}`
-          : dataContext;
+        const naviDirective = this.dataStore.getDirectiveForAgent("lyra");
+        const fullContext = [dataContext, transcriptBrief, naviDirective].filter(Boolean).join("\n\n");
         const email = await this.emailMarketing.createEmail(
           `${skillInput.trim() || "weekly devotional newsletter"}\n\n${fullContext}`
         );
@@ -345,23 +346,27 @@ ${this.dataStore.getTranscriptBrief()}`;
         return `**Lyra's Email Strategy**\n\n${email}`;
       }
 
-      // Kaia (Community) handles /community — inject live data
+      // Kaia (Community) handles /community — inject live data + Navi's directives
       if (skillName === "community") {
         console.log("[Kaia] Working on community engagement...");
         const dataContext = this.dataStore.getSummaryForAgents();
+        const naviDirective = this.dataStore.getDirectiveForAgent("kaia");
+        const fullContext = [dataContext, naviDirective].filter(Boolean).join("\n\n");
         const engagement = await this.community.engage(
-          `${skillInput.trim() || "general community engagement strategy"}\n\n${dataContext}`
+          `${skillInput.trim() || "general community engagement strategy"}\n\n${fullContext}`
         );
         console.log("[Kaia] Community plan ready — sending to Rose.");
         return `**Kaia's Community Plan**\n\n${engagement}`;
       }
 
-      // Nova (Partnerships) handles /partners — inject live data
+      // Nova (Partnerships) handles /partners — inject live data + Navi's directives
       if (skillName === "partners") {
         console.log("[Nova] Working on partnerships...");
         const dataContext = this.dataStore.getSummaryForAgents();
+        const naviDirective = this.dataStore.getDirectiveForAgent("nova");
+        const fullContext = [dataContext, naviDirective].filter(Boolean).join("\n\n");
         const partnership = await this.partnerships.partner(
-          `${skillInput.trim() || "find brand partnership opportunities"}\n\n${dataContext}`
+          `${skillInput.trim() || "find brand partnership opportunities"}\n\n${fullContext}`
         );
         console.log("[Nova] Partnership strategy ready — sending to Rose.");
         return `**Nova's Partnership Strategy**\n\n${partnership}`;
@@ -407,6 +412,36 @@ ${this.dataStore.getTranscriptBrief()}`;
     });
 
     return assistantMessage;
+  }
+
+  /**
+   * Parse Navi's insights report and extract per-agent directives.
+   * Saves them to the DataStore so every agent can read them.
+   */
+  private saveNaviDirectives(insights: string): void {
+    const extractDirective = (agentLabel: string): string => {
+      // Match "**To AgentName (Role):**" or "**To AgentName:**" followed by content until next "**To" or "###"
+      const pattern = new RegExp(
+        `\\*\\*To ${agentLabel}[^*]*\\*\\*[:\\s]*([\\s\\S]*?)(?=\\*\\*To |### |$)`,
+        "i"
+      );
+      const match = insights.match(pattern);
+      return match ? match[1].trim() : "";
+    };
+
+    const directives = {
+      fullReport: insights,
+      eden: extractDirective("Eden"),
+      mara: extractDirective("Mara"),
+      zion: extractDirective("Zion"),
+      adara: extractDirective("Adara"),
+      lyra: extractDirective("Lyra"),
+      kaia: extractDirective("Kaia"),
+      nova: extractDirective("Nova"),
+      updatedAt: new Date().toISOString(),
+    };
+
+    this.dataStore.saveTeamDirectives(directives);
   }
 
   private async executeSkill(
