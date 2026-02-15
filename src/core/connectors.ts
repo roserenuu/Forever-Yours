@@ -190,8 +190,8 @@ export class YouTubeConnector implements PlatformConnector {
           console.log(`[YouTube] Got transcript via Innertube (${client.clientName}) for ${videoId}`);
           return transcript;
         }
-      } catch {
-        // Try next client
+      } catch (err) {
+        console.log(`[YouTube] Innertube ${client.clientName} threw for ${videoId}: ${err instanceof Error ? err.message : err}`);
       }
     }
 
@@ -202,8 +202,8 @@ export class YouTubeConnector implements PlatformConnector {
         console.log(`[YouTube] Got transcript via page scrape for ${videoId}`);
         return transcript;
       }
-    } catch {
-      // Fall through
+    } catch (err) {
+      console.log(`[YouTube] Page scrape threw for ${videoId}: ${err instanceof Error ? err.message : err}`);
     }
 
     console.log(`[YouTube] All transcript methods failed for ${videoId}`);
@@ -218,17 +218,21 @@ export class YouTubeConnector implements PlatformConnector {
     return new Promise((resolve) => {
       const safeId = videoId.replace(/[^a-zA-Z0-9_-]/g, "");
       const tempBase = join(tmpdir(), `yt-${safeId}`);
-      const cmd = `yt-dlp --skip-download --write-auto-sub --write-sub --sub-lang "en.*,en" --sub-format json3 -o "${tempBase}" "https://www.youtube.com/watch?v=${safeId}"`;
+      const cmd = `yt-dlp --skip-download --write-auto-sub --write-sub --sub-lang "en.*,en" --sub-format json3 --no-check-certificates -o "${tempBase}" "https://www.youtube.com/watch?v=${safeId}" 2>&1`;
 
       exec(cmd, { timeout: 45000 }, (error, stdout, stderr) => {
-        const output = (stdout || "") + (stderr || "");
+        const output = ((stdout || "") + (stderr || "")).trim();
         if (error) {
           if (output.includes("not recognized") || output.includes("command not found") || error.message?.includes("ENOENT")) {
             console.log("[YouTube] yt-dlp not installed, skipping");
           } else {
-            console.log(`[YouTube] yt-dlp error for ${safeId}: ${output.split("\n").pop()}`);
+            // Log the full output so we can see what went wrong
+            const lastLines = output.split("\n").filter(Boolean).slice(-3).join(" | ");
+            console.log(`[YouTube] yt-dlp error for ${safeId}: ${lastLines || error.message}`);
           }
           // Still check if subtitle file was written despite error
+        } else {
+          console.log(`[YouTube] yt-dlp completed for ${safeId}: ${output.split("\n").filter(Boolean).slice(-2).join(" | ")}`);
         }
 
         // Try to find and read the subtitle file (json3 format)
