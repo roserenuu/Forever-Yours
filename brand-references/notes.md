@@ -14,6 +14,11 @@ Soft, minimal, faith-based motivational content with an elegant editorial feel. 
 
 ### Carousel Rules
 - **Slide count:** 3 to 8 slides per carousel (varies per message)
+- **Always mix lengths** — every batch of carousels MUST include a variety:
+  - **Short (3-4 slides):** Quick punch. One powerful idea, minimal text, maximum impact. Easy saves and shares.
+  - **Medium (5-6 slides):** The sweet spot. Enough room to build a message with a satisfying payoff. Best for storytelling.
+  - **Long (7-8 slides):** Deep dives. Multi-part messages, full scripture breakdowns, or emotional journeys that reward the full swipe-through. Maximizes time spent on post (algorithm loves this).
+- **Never repeat a format back to back** — if the last carousel was a 4-slide quote, the next one should be a 7-slide story or a 5-slide verse breakdown. Keep the feed fresh and unpredictable.
 - **Every slide must be different** — no two slides should look the same. Vary the layout, font style, background color, text size, or design pattern across slides.
 - **All slides must relate** — they tell one story, build one message, or unpack one theme. The carousel is a journey, not random quotes.
 - **Hook & flow** — each slide must make the viewer want to swipe to the next one:
@@ -30,6 +35,16 @@ Soft, minimal, faith-based motivational content with an elegant editorial feel. 
 - Use "Part 1 / Part 2" style reveals
 - Open with a bold statement, then explain why
 - Repetition builds that grow in intensity (like the "god is with you." reference)
+
+### Viral Carousel Tactics
+- **Slide 1 is everything** — if they don't stop scrolling, nothing else matters. Use bold text, a hot take, a question, or an incomplete thought that DEMANDS the swipe.
+- **Cliffhanger between slides** — end a sentence on one slide, finish it on the next. Cut a thought mid-line. "The one thing nobody tells you about..." (swipe)
+- **Saveable content** — carousels that people screenshot or save get pushed by the algorithm. Make every carousel worth saving.
+- **Shareable to stories** — design slides that look good when someone shares a single slide to their story. Each slide should stand alone visually even if the message connects.
+- **Emotional arc** — take the reader on a journey: struggle > truth > hope. People share what made them feel something.
+- **End with a CTA or conversation starter** — "Tag someone who needs this.", "Save this for when you need it.", or just a truth so powerful they have to share it.
+- **Relatability first, scripture second** — hook them with something they FEEL, then hit them with God's word. Meet people where they are.
+- **Pattern interrupts** — throw in an unexpected slide (different color, different font, a single word) to break the rhythm and re-grab attention mid-swipe.
 
 ### Quality Standards
 - Always high resolution (1080 x 1440px, no exceptions)
