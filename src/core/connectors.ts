@@ -176,10 +176,30 @@ export class YouTubeConnector implements PlatformConnector {
     }
 
     // Method 2: Innertube API (try multiple client types)
-    const clients = [
-      { clientName: "ANDROID", clientVersion: "19.29.37", userAgent: "com.google.android.youtube/19.29.37" },
-      { clientName: "WEB", clientVersion: "2.20241126.01.00", userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" },
-      { clientName: "TVHTML5_SIMPLY_EMBEDDED_PLAYER", clientVersion: "2.0", userAgent: "Mozilla/5.0" },
+    const clients: Array<{ clientName: string; clientVersion: string; userAgent: string; apiKey?: string; androidSdkVersion?: number }> = [
+      {
+        clientName: "ANDROID",
+        clientVersion: "19.29.37",
+        userAgent: "com.google.android.youtube/19.29.37 (Linux; U; Android 14) gzip",
+        apiKey: "AIzaSyA8eiZmM1FaDVjRy-df2KTyQ_vz_yYM39w",
+        androidSdkVersion: 34,
+      },
+      {
+        clientName: "IOS",
+        clientVersion: "19.29.1",
+        userAgent: "com.google.ios.youtube/19.29.1 (iPhone16,2; U; CPU iOS 17_5_1 like Mac OS X;)",
+        apiKey: "AIzaSyB-63vPrdThhKuerbB2N_l7Kwwcxj6yUAc",
+      },
+      {
+        clientName: "WEB",
+        clientVersion: "2.20241126.01.00",
+        userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+      },
+      {
+        clientName: "TVHTML5_SIMPLY_EMBEDDED_PLAYER",
+        clientVersion: "2.0",
+        userAgent: "Mozilla/5.0",
+      },
     ];
 
     for (const client of clients) {
@@ -317,25 +337,47 @@ export class YouTubeConnector implements PlatformConnector {
    */
   private async fetchTranscriptViaInnertube(
     videoId: string,
-    client: { clientName: string; clientVersion: string; userAgent: string }
+    client: { clientName: string; clientVersion: string; userAgent: string; apiKey?: string; androidSdkVersion?: number }
   ): Promise<string | null> {
-    const playerRes = await fetch("https://www.youtube.com/youtubei/v1/player", {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      "User-Agent": client.userAgent,
+    };
+
+    // Android client needs X-Goog-Api-Format-Version header
+    if (client.clientName === "ANDROID") {
+      headers["X-Goog-Api-Format-Version"] = "2";
+    }
+
+    const url = client.apiKey
+      ? `https://www.youtube.com/youtubei/v1/player?key=${client.apiKey}`
+      : "https://www.youtube.com/youtubei/v1/player";
+
+    const contextClient: Record<string, unknown> = {
+      clientName: client.clientName,
+      clientVersion: client.clientVersion,
+      hl: "en",
+    };
+    if (client.androidSdkVersion) {
+      contextClient.androidSdkVersion = client.androidSdkVersion;
+      contextClient.osName = "Android";
+      contextClient.osVersion = "14";
+      contextClient.platform = "MOBILE";
+    }
+
+    const playerRes = await fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": client.userAgent,
-      },
+      headers,
       body: JSON.stringify({
-        context: {
-          client: {
-            clientName: client.clientName,
-            clientVersion: client.clientVersion,
-            hl: "en",
-          },
-        },
+        context: { client: contextClient },
         videoId,
       }),
     });
+
+    if (!playerRes.ok) {
+      console.log(`[YouTube] Innertube ${client.clientName}: HTTP ${playerRes.status} for ${videoId}`);
+      return null;
+    }
 
     const playerData = (await playerRes.json()) as Record<string, unknown>;
 
@@ -343,16 +385,25 @@ export class YouTubeConnector implements PlatformConnector {
     const playability = playerData.playabilityStatus as Record<string, string> | undefined;
     if (playability?.status && playability.status !== "OK") {
       console.log(`[YouTube] Innertube ${client.clientName}: playability=${playability.status} for ${videoId}`);
+      return null;
     }
 
     const captions = playerData.captions as Record<string, unknown> | undefined;
-    if (!captions) return null;
+    if (!captions) {
+      console.log(`[YouTube] Innertube ${client.clientName}: no captions object for ${videoId}`);
+      return null;
+    }
 
     const renderer = captions.playerCaptionsTracklistRenderer as Record<string, unknown> | undefined;
     if (!renderer) return null;
 
     const captionTracks = renderer.captionTracks as Array<Record<string, string>> | undefined;
-    if (!captionTracks || captionTracks.length === 0) return null;
+    if (!captionTracks || captionTracks.length === 0) {
+      console.log(`[YouTube] Innertube ${client.clientName}: no caption tracks for ${videoId}`);
+      return null;
+    }
+
+    console.log(`[YouTube] Innertube ${client.clientName}: found ${captionTracks.length} caption track(s) for ${videoId}`);
 
     // Pick English track if available, otherwise first track
     let track = captionTracks[0];
@@ -368,6 +419,10 @@ export class YouTubeConnector implements PlatformConnector {
 
     captionUrl = captionUrl.replace(/\\u0026/g, "&");
     const captionRes = await fetch(captionUrl);
+    if (!captionRes.ok) {
+      console.log(`[YouTube] Innertube ${client.clientName}: caption download HTTP ${captionRes.status} for ${videoId}`);
+      return null;
+    }
     const xml = await captionRes.text();
     return this.parseXmlCaptions(xml);
   }
