@@ -1,6 +1,5 @@
 import { DataStore } from "./datastore.js";
-import { exec, execSync } from "child_process";
-import { readFileSync, readdirSync, unlinkSync } from "fs";
+import { exec } from "child_process";
 import { tmpdir } from "os";
 import { join } from "path";
 
@@ -215,76 +214,102 @@ export class YouTubeConnector implements PlatformConnector {
    * yt-dlp handles all of YouTube's anti-bot measures.
    */
   private async fetchTranscriptViaYtdlp(videoId: string): Promise<string | null> {
-    return new Promise((resolve) => {
-      const safeId = videoId.replace(/[^a-zA-Z0-9_-]/g, "");
-      const tempBase = join(tmpdir(), `yt-${safeId}`);
-      const cmd = `yt-dlp --skip-download --write-auto-sub --write-sub --sub-lang "en.*,en" --sub-format json3 --no-check-certificates -o "${tempBase}" "https://www.youtube.com/watch?v=${safeId}" 2>&1`;
+    const safeId = videoId.replace(/[^a-zA-Z0-9_-]/g, "");
 
-      exec(cmd, { timeout: 45000 }, (error, stdout, stderr) => {
-        const output = ((stdout || "") + (stderr || "")).trim();
+    // Use --dump-json to get subtitle URLs without downloading them
+    // This avoids the 429 rate limit on subtitle downloads
+    const jsonStr = await new Promise<string | null>((resolve) => {
+      const cmd = `yt-dlp --skip-download --dump-json --no-check-certificates "https://www.youtube.com/watch?v=${safeId}" 2>&1`;
+      exec(cmd, { timeout: 45000, maxBuffer: 10 * 1024 * 1024 }, (error, stdout) => {
         if (error) {
-          if (output.includes("not recognized") || output.includes("command not found") || error.message?.includes("ENOENT")) {
+          if (stdout?.includes("not recognized") || stdout?.includes("command not found") || error.message?.includes("ENOENT")) {
             console.log("[YouTube] yt-dlp not installed, skipping");
           } else {
-            // Log the full output so we can see what went wrong
-            const lastLines = output.split("\n").filter(Boolean).slice(-3).join(" | ");
-            console.log(`[YouTube] yt-dlp error for ${safeId}: ${lastLines || error.message}`);
+            const lastLine = (stdout || "").trim().split("\n").filter(Boolean).pop() || error.message;
+            console.log(`[YouTube] yt-dlp dump-json error for ${safeId}: ${lastLine}`);
           }
-          // Still check if subtitle file was written despite error
-        } else {
-          console.log(`[YouTube] yt-dlp completed for ${safeId}: ${output.split("\n").filter(Boolean).slice(-2).join(" | ")}`);
+          resolve(null);
+          return;
         }
-
-        // Try to find and read the subtitle file (json3 format)
-        const tempDir = tmpdir();
-        try {
-          const allFiles = readdirSync(tempDir) as string[];
-          const subFiles = allFiles.filter((f: string) => f.startsWith(`yt-${safeId}`) && (f.endsWith(".json3") || f.endsWith(".srt") || f.endsWith(".vtt")));
-
-          for (const file of subFiles) {
-            const filePath = join(tempDir, file);
-            try {
-              const content = readFileSync(filePath, "utf-8");
-
-              if (file.endsWith(".json3")) {
-                const json = JSON.parse(content);
-                const lines: string[] = [];
-                if (json.events) {
-                  for (const event of json.events) {
-                    if (event.segs) {
-                      const text = event.segs.map((s: { utf8: string }) => s.utf8 || "").join("").trim();
-                      if (text && text !== "\n") lines.push(text);
-                    }
-                  }
-                }
-                // Cleanup
-                try { unlinkSync(filePath); } catch { /* ignore */ }
-                if (lines.length > 0) {
-                  resolve(lines.join(" "));
-                  return;
-                }
-              } else {
-                // SRT/VTT format
-                const text = content
-                  .replace(/^\d+\s*$/gm, "")
-                  .replace(/\d{2}:\d{2}:\d{2}[.,]\d{3}\s*-->\s*\d{2}:\d{2}:\d{2}[.,]\d{3}/g, "")
-                  .replace(/WEBVTT.*$/gm, "")
-                  .replace(/<[^>]+>/g, "")
-                  .replace(/\n{2,}/g, " ")
-                  .trim();
-                try { unlinkSync(filePath); } catch { /* ignore */ }
-                if (text.length > 0) {
-                  resolve(text);
-                  return;
-                }
-              }
-            } catch { /* skip this file */ }
-          }
-        } catch { /* ignore dir read error */ }
-
-        resolve(null);
+        resolve(stdout || null);
       });
     });
+
+    if (!jsonStr) return null;
+
+    try {
+      // yt-dlp --dump-json outputs video metadata including subtitle URLs
+      const data = JSON.parse(jsonStr.trim());
+
+      // Look for auto or manual captions
+      const allSubs = { ...(data.subtitles || {}), ...(data.automatic_captions || {}) };
+
+      // Find English subtitle track
+      let subUrl: string | null = null;
+      const langKeys = Object.keys(allSubs);
+      const enKey = langKeys.find((k) => k === "en") ||
+                    langKeys.find((k) => k.startsWith("en")) ||
+                    langKeys[0];
+
+      if (enKey && allSubs[enKey]) {
+        const formats = allSubs[enKey] as Array<{ url: string; ext: string }>;
+        // Prefer json3, then srv1 (XML), then vtt
+        const json3 = formats.find((f) => f.ext === "json3");
+        const srv1 = formats.find((f) => f.ext === "srv1");
+        const vtt = formats.find((f) => f.ext === "vtt");
+        const chosen = json3 || srv1 || vtt;
+        if (chosen) subUrl = chosen.url;
+      }
+
+      if (!subUrl) {
+        console.log(`[YouTube] yt-dlp found no subtitle URLs for ${safeId} (langs: ${langKeys.join(",")})`);
+        return null;
+      }
+
+      // Fetch the subtitle content ourselves (no rate limit from yt-dlp)
+      const subRes = await fetch(subUrl);
+      if (!subRes.ok) {
+        console.log(`[YouTube] Subtitle fetch failed for ${safeId}: HTTP ${subRes.status}`);
+        return null;
+      }
+
+      const content = await subRes.text();
+
+      // Try parsing as JSON3
+      try {
+        const json = JSON.parse(content);
+        if (json.events) {
+          const lines: string[] = [];
+          for (const event of json.events) {
+            if (event.segs) {
+              const text = event.segs.map((s: { utf8: string }) => s.utf8 || "").join("").trim();
+              if (text && text !== "\n") lines.push(text);
+            }
+          }
+          if (lines.length > 0) return lines.join(" ");
+        }
+      } catch {
+        // Not JSON, try as XML/VTT
+      }
+
+      // Try as XML (srv1 format)
+      const xmlResult = this.parseXmlCaptions(content);
+      if (xmlResult) return xmlResult;
+
+      // Try as VTT/SRT
+      const text = content
+        .replace(/^\d+\s*$/gm, "")
+        .replace(/\d{2}:\d{2}:\d{2}[.,]\d{3}\s*-->\s*\d{2}:\d{2}:\d{2}[.,]\d{3}/g, "")
+        .replace(/WEBVTT.*$/gm, "")
+        .replace(/<[^>]+>/g, "")
+        .replace(/\n{2,}/g, " ")
+        .trim();
+      return text.length > 0 ? text : null;
+
+    } catch (err) {
+      console.log(`[YouTube] yt-dlp JSON parse error for ${safeId}: ${err instanceof Error ? err.message : err}`);
+      return null;
+    }
   }
 
   /**
@@ -504,7 +529,7 @@ export class YouTubeConnector implements PlatformConnector {
             transcriptMap.set(videoId, transcript);
             // Small delay between requests to avoid rate limiting
             if (transcriptMap.size < detailItems.length) {
-              await new Promise((r) => setTimeout(r, 1500));
+              await new Promise((r) => setTimeout(r, 3000));
             }
           }
         }
