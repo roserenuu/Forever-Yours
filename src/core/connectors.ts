@@ -1,6 +1,6 @@
 import { DataStore } from "./datastore.js";
 import { exec, execSync } from "child_process";
-import { readFileSync } from "fs";
+import { readFileSync, readdirSync, unlinkSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 
@@ -232,7 +232,6 @@ export class YouTubeConnector implements PlatformConnector {
         }
 
         // Try to find and read the subtitle file (json3 format)
-        const { readdirSync } = require("fs");
         const tempDir = tmpdir();
         try {
           const allFiles = readdirSync(tempDir) as string[];
@@ -255,7 +254,7 @@ export class YouTubeConnector implements PlatformConnector {
                   }
                 }
                 // Cleanup
-                try { require("fs").unlinkSync(filePath); } catch { /* ignore */ }
+                try { unlinkSync(filePath); } catch { /* ignore */ }
                 if (lines.length > 0) {
                   resolve(lines.join(" "));
                   return;
@@ -269,7 +268,7 @@ export class YouTubeConnector implements PlatformConnector {
                   .replace(/<[^>]+>/g, "")
                   .replace(/\n{2,}/g, " ")
                   .trim();
-                try { require("fs").unlinkSync(filePath); } catch { /* ignore */ }
+                try { unlinkSync(filePath); } catch { /* ignore */ }
                 if (text.length > 0) {
                   resolve(text);
                   return;
