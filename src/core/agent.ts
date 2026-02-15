@@ -5,6 +5,10 @@ import { QAReviewer } from "./reviewer.js";
 import { SchedulerAgent } from "./scheduler.js";
 import { MarketerAgent } from "./marketer.js";
 import { AnalyticsAgent } from "./analytics.js";
+import { AdCopyAgent } from "./ad-copy.js";
+import { EmailMarketingAgent } from "./email-marketing.js";
+import { CommunityAgent } from "./community.js";
+import { PartnershipsAgent } from "./partnerships.js";
 import { DataStore } from "./datastore.js";
 import { CsvImporter } from "./csv-import.js";
 import { ConnectorManager } from "./connectors.js";
@@ -33,6 +37,10 @@ export class ForeverYoursAgent {
   private scheduler: SchedulerAgent;
   private marketer: MarketerAgent;
   private analytics: AnalyticsAgent;
+  private adCopy: AdCopyAgent;
+  private emailMarketing: EmailMarketingAgent;
+  private community: CommunityAgent;
+  private partnerships: PartnershipsAgent;
   private dataStore: DataStore;
   private csvImporter: CsvImporter;
   private connectors: ConnectorManager;
@@ -50,6 +58,10 @@ export class ForeverYoursAgent {
     this.scheduler = new SchedulerAgent(this.brand, this.model);
     this.marketer = new MarketerAgent(this.brand, this.model);
     this.analytics = new AnalyticsAgent(this.brand, this.model);
+    this.adCopy = new AdCopyAgent(this.brand, this.model);
+    this.emailMarketing = new EmailMarketingAgent(this.brand, this.model);
+    this.community = new CommunityAgent(this.brand, this.model);
+    this.partnerships = new PartnershipsAgent(this.brand, this.model);
     this.dataStore = new DataStore();
     this.csvImporter = new CsvImporter(this.dataStore);
     this.connectors = new ConnectorManager(this.dataStore);
@@ -111,9 +123,13 @@ You are Eden — Rose's personal content machine. When she asks for content, giv
 ## Your Team
 - **Selah** (QA Reviewer) — reviews everything you write before Rose sees it. Bring your A-game.
 - **Mara** (Scheduler) — plans the weekly content calendar. Rose uses /schedule to talk to her.
-- **Zion** (Marketing) — handles product promos and sales content. Rose uses /promote to talk to him.
+- **Zion** (Marketing) — handles organic product promos and sales content. Rose uses /promote to talk to him.
 - **Navi** (Analytics) — reads performance data and tells the team what's working. Rose uses /insights to talk to her. When Navi gives directives, FOLLOW THEM — she has the data.
-You handle all creative content. If Rose asks about scheduling, remind her to use /schedule. If she asks about product promos, remind her to use /promote. If she asks about what's working or analytics, remind her to use /insights.
+- **Adara** (Ad Copy & Paid Media) — creates paid ad campaigns, A/B test variants, and landing page copy. Rose uses /ads to talk to her.
+- **Lyra** (Email Marketing) — builds email sequences, newsletters, automations, and list-building strategies. Rose uses /emails to talk to her.
+- **Kaia** (Community Manager) — manages DM responses, comment strategy, follower relationships, and community growth. Rose uses /community to talk to her.
+- **Nova** (Partnerships) — handles brand deals, creator collabs, sponsorships, and strategic partnerships. Rose uses /partners to talk to her.
+You handle all creative content. If Rose asks about scheduling, remind her to use /schedule. If she asks about organic product promos, remind her to use /promote. If she asks about paid ads, remind her to use /ads. If she asks about email marketing or newsletters, remind her to use /emails. If she asks about community engagement or DMs, remind her to use /community. If she asks about brand deals or collabs, remind her to use /partners. If she asks about what's working or analytics, remind her to use /insights.
 
 ## Rose Renuu's Voice — Study This Carefully
 Rose writes Love Notes as if God Himself is speaking directly to one person — His child. Her writing is:
@@ -299,6 +315,58 @@ ${this.dataStore.getTranscriptBrief()}`;
         return `**Zion's Marketing Plan**\n\n${promo}`;
       }
 
+      // Adara (Ad Copy) handles /ads — inject live data + transcripts
+      if (skillName === "ads") {
+        console.log("[Adara] Creating your ad campaign...");
+        const dataContext = this.dataStore.getSummaryForAgents();
+        const transcriptBrief = this.dataStore.getTranscriptBrief();
+        const fullContext = transcriptBrief
+          ? `${dataContext}\n\n${transcriptBrief}`
+          : dataContext;
+        const ad = await this.adCopy.createAd(
+          `${skillInput.trim() || "Forever Yours devotional book — drive sales"}\n\n${fullContext}`
+        );
+        console.log("[Adara] Ad campaign ready — sending to Rose.");
+        return `**Adara's Ad Campaign**\n\n${ad}`;
+      }
+
+      // Lyra (Email Marketing) handles /emails — inject live data + transcripts
+      if (skillName === "emails") {
+        console.log("[Lyra] Building your email content...");
+        const dataContext = this.dataStore.getSummaryForAgents();
+        const transcriptBrief = this.dataStore.getTranscriptBrief();
+        const fullContext = transcriptBrief
+          ? `${dataContext}\n\n${transcriptBrief}`
+          : dataContext;
+        const email = await this.emailMarketing.createEmail(
+          `${skillInput.trim() || "weekly devotional newsletter"}\n\n${fullContext}`
+        );
+        console.log("[Lyra] Email content ready — sending to Rose.");
+        return `**Lyra's Email Strategy**\n\n${email}`;
+      }
+
+      // Kaia (Community) handles /community — inject live data
+      if (skillName === "community") {
+        console.log("[Kaia] Working on community engagement...");
+        const dataContext = this.dataStore.getSummaryForAgents();
+        const engagement = await this.community.engage(
+          `${skillInput.trim() || "general community engagement strategy"}\n\n${dataContext}`
+        );
+        console.log("[Kaia] Community plan ready — sending to Rose.");
+        return `**Kaia's Community Plan**\n\n${engagement}`;
+      }
+
+      // Nova (Partnerships) handles /partners — inject live data
+      if (skillName === "partners") {
+        console.log("[Nova] Working on partnerships...");
+        const dataContext = this.dataStore.getSummaryForAgents();
+        const partnership = await this.partnerships.partner(
+          `${skillInput.trim() || "find brand partnership opportunities"}\n\n${dataContext}`
+        );
+        console.log("[Nova] Partnership strategy ready — sending to Rose.");
+        return `**Nova's Partnership Strategy**\n\n${partnership}`;
+      }
+
       // Eden handles all other skills
       const skill = this.skills.get(skillName);
       if (skill) {
@@ -370,6 +438,10 @@ ${this.dataStore.getTranscriptBrief()}`;
     this.scheduler.clearHistory();
     this.marketer.clearHistory();
     this.analytics.clearHistory();
+    this.adCopy.clearHistory();
+    this.emailMarketing.clearHistory();
+    this.community.clearHistory();
+    this.partnerships.clearHistory();
   }
 
   getBrand(): BrandConfig {

@@ -44,8 +44,12 @@ Create a 7-day content plan that balances growth, engagement, and rest. You know
 ## The Team
 - Eden (Content Creator) will write all the content you schedule
 - Selah (QA Reviewer) will review it before Rose sees it
-- Zion (Marketing) handles product promos — coordinate with him on promo days
+- Zion (Marketing) handles organic product promos — coordinate with him on promo days
 - Navi (Analytics) reads the data and tells you what's working — FOLLOW HER DIRECTIVES on posting times, frequency, and platform focus
+- Adara (Ad Copy) handles paid ads — coordinate so paid campaigns complement organic posts, not compete with them
+- Lyra (Email Marketing) handles newsletters — schedule email send days so they don't clash with big organic push days
+- Kaia (Community) handles engagement — schedule engagement-heavy days (polls, Q&As, Lives) and flag them for Kaia
+- Nova (Partnerships) handles brand deals — block out sponsored content slots and make sure they're spaced apart (max 1-2/week)
 - You schedule everything and make sure the week has variety
 
 ## Rose's Platforms (TWO Instagram Accounts)
@@ -104,7 +108,13 @@ Respond with a clear, easy-to-follow weekly plan. For each day include:
 - Best posting time
 - Any notes (e.g., "pair with product mention", "repurpose for TikTok")
 
-End with a "WEEK OVERVIEW" summary: how many of each content type, the emotional arc of the week, and any tips.`,
+End with a "WEEK OVERVIEW" summary: how many of each content type, the emotional arc of the week, and any tips.
+
+Also include a "TEAM COORDINATION" section:
+- **Adara**: Which days to boost posts with paid ads, and what budget to allocate
+- **Lyra**: Best day to send the weekly newsletter (align with content themes)
+- **Kaia**: Which posts need extra engagement attention, and when to do Lives or Q&As
+- **Nova**: If sponsored content is scheduled, which days and how it fits the week's flow`,
       messages: [
         {
           role: "user",

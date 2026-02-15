@@ -5,14 +5,15 @@ import * as readline from "readline";
 
 async function main() {
   console.log("\n");
-  console.log("  ┌────────────────────────────────────────────────────┐");
-  console.log("  │           JESUS FOREVER YOURS                      │");
-  console.log("  │           AI Brand Team — CLI Mode                 │");
-  console.log("  │                                                    │");
-  console.log("  │  Eden (Creator) · Selah (QA) · Mara (Scheduler)   │");
-  console.log("  │  Zion (Marketing) · Navi (Analytics)               │");
-  console.log("  │  You are seen. You are loved. You are His.         │");
-  console.log("  └────────────────────────────────────────────────────┘");
+  console.log("  ┌─────────────────────────────────────────────────────────────┐");
+  console.log("  │                JESUS FOREVER YOURS                           │");
+  console.log("  │                AI Brand Team — CLI Mode                      │");
+  console.log("  │                                                             │");
+  console.log("  │  Eden (Creator) · Selah (QA) · Mara (Scheduler)             │");
+  console.log("  │  Zion (Marketing) · Navi (Analytics) · Adara (Ads)          │");
+  console.log("  │  Lyra (Email) · Kaia (Community) · Nova (Partnerships)      │");
+  console.log("  │  You are seen. You are loved. You are His.                  │");
+  console.log("  └─────────────────────────────────────────────────────────────┘");
   console.log("");
 
   const agent = new ForeverYoursAgent();
@@ -27,9 +28,13 @@ async function main() {
   }
   console.log("");
   console.log("  Team commands:");
-  console.log("    /schedule — Mara plans your weekly content calendar");
-  console.log("    /promote  — Zion creates marketing content for your products");
-  console.log("    /insights — Navi analyzes your performance and directs the team");
+  console.log("    /schedule  — Mara plans your weekly content calendar");
+  console.log("    /promote   — Zion creates organic marketing content");
+  console.log("    /insights  — Navi analyzes your performance and directs the team");
+  console.log("    /ads       — Adara creates paid ad campaigns and A/B tests");
+  console.log("    /emails    — Lyra builds email sequences and newsletters");
+  console.log("    /community — Kaia manages engagement, DMs, and community growth");
+  console.log("    /partners  — Nova handles brand deals, collabs, and sponsorships");
   console.log("");
   console.log("  Data commands:");
   console.log("    /dashboard — Visual analytics dashboard");
