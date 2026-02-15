@@ -1,0 +1,6 @@
+# robots.txt for jesusforeveryours.com
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://jesusforeveryours.com/sitemap.xml
