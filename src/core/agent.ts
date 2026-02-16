@@ -419,6 +419,19 @@ ${this.dataStore.getDirectiveForAgent("eden")}`;
       }
     }
 
+    // Scrub any past "I can't make images" responses from history to prevent poisoning
+    const imageDenialPatterns = [
+      /can'?t (actually )?(create|design|generate|make|send).{0,30}(image|graphic|picture|visual)/i,
+      /cannot (actually )?(create|design|generate|make|send).{0,30}(image|graphic|picture|visual)/i,
+      /don'?t have.{0,20}(image generation|graphic design)/i,
+      /I'?m (a )?(text-based|text based)/i,
+      /not.{0,10}(image|graphic) generation/i,
+    ];
+    this.conversationHistory = this.conversationHistory.filter((msg) => {
+      if (msg.role !== "assistant" || typeof msg.content !== "string") return true;
+      return !imageDenialPatterns.some((rx) => rx.test(msg.content as string));
+    });
+
     this.conversationHistory.push({ role: "user", content: userMessage });
 
     const response = await this.client.messages.create({
@@ -432,11 +445,28 @@ ${this.dataStore.getDirectiveForAgent("eden")}`;
       response.content[0].type === "text" ? response.content[0].text : "";
 
     // Safety net: if Eden still says she can't make images, intercept and route to Iris
-    const cantMakeImages = /\b(can'?t|cannot|don'?t have the ability|unable to|not able to|I'?m (a )?text-based)\b.{0,40}\b(create|generate|make|send|produce|design)?\b.{0,20}\b(image|picture|graphic|visual|photo|png)\b/i;
-    if (cantMakeImages.test(assistantMessage)) {
-      console.log("[Eden] Caught 'can't make images' response — routing to Iris instead...");
+    const cantMakeImages = [
+      /can'?t (actually )?(create|design|generate|make|send|produce)/i,
+      /cannot (actually )?(create|design|generate|make|send|produce)/i,
+      /don'?t have (the )?(ability|capability|capabilities)/i,
+      /not able to (create|design|generate|make|send)/i,
+      /unable to (create|design|generate|make|send)/i,
+      /I'?m (a )?(text-based|text based)/i,
+      /don'?t have image generation/i,
+      /no (image|graphic|design) (generation|creation|capabilities)/i,
+      /can'?t actually design graphics/i,
+      /I can only write/i,
+      /hire a.{0,20}(graphic designer|designer)/i,
+      /use.{0,15}(canva|midjourney|dall-?e)/i,
+    ];
+    const looksLikeImageDenial = cantMakeImages.some((rx) => rx.test(assistantMessage));
+    if (looksLikeImageDenial) {
+      console.log("[Eden] Caught image-denial response — routing to Iris instead...");
+      // Remove the poisoned conversation entry and replace with a corrected one
+      this.conversationHistory.pop(); // remove the user message we just pushed
       const result = await this.designer.design(userMessage);
       console.log("[Iris] Graphics ready — check the designs/ folder.");
+      this.conversationHistory.push({ role: "user", content: userMessage });
       this.conversationHistory.push({ role: "assistant", content: result.text });
       return { text: result.text, files: result.files };
     }
