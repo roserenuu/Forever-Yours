@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { BrandConfig } from "../config/brand.js";
+import { getAlgorithmBriefForAgents } from "../config/instagram-algorithm.js";
 
 export interface WeeklyPlan {
   week: string;
@@ -81,18 +82,23 @@ When video transcripts and performance data are provided:
 - If a certain hook style or topic is clearly winning, schedule variations of it throughout the week
 - If Shorts are outperforming long-form (or vice versa), adjust the YouTube schedule accordingly
 
-## Scheduling Rules
+${getAlgorithmBriefForAgents()}
+
+## Scheduling Rules (Updated for Mosseri's 2025-2026 Algorithm)
 1. Monday: Start the week strong — carousel or reel with a fresh Love Note
 2. Mix content types throughout the week — never 2 carousels back-to-back
-3. Include at least 2 reels per week (algorithm loves video)
-4. Include 1 carousel per week (highest save rate)
-5. Include 1-2 Love Notes per week (signature content)
+3. Include 2-4 Reels per week (Mosseri's recommended cadence — Reels are the growth engine)
+4. Include 1-2 carousels per week (highest engagement format — 4x more than Reels. Use 8-10 slides for peak performance)
+5. Include 1-2 Love Notes per week (signature content — optimize as carousels for algorithm boost)
 6. Wednesday or Thursday: mid-week engagement push (reel or interactive story)
 7. Friday: lighter content or community engagement
-8. Saturday: optional rest day or story-only day
+8. Saturday: optional rest day or story-only day (but ALWAYS post Stories — Mosseri says daily Stories prevent unfollows)
 9. Sunday: devotional or scripture-focused content
 10. Each day should have a DIFFERENT theme — variety keeps the audience engaged
-11. Best posting times: 9am, 12pm, or 7pm EST
+11. Best posting times: 9am, 12pm, or 7pm EST (no scheduling penalty — Mosseri confirmed)
+12. Post 5-7 Stories EVERY day — Stories are essential for audience retention (Mosseri confirmed)
+13. Feed posts: 3-5 per week (prioritize carousels — they get a "second chance" mechanism)
+14. Every piece of content should be optimized for DM SHARES — this is the #1 signal for reaching new audiences (Mosseri: sends are weighted 3-5x more than likes)
 
 ## Products to Weave In (coordinate with Zion)
 - "Forever Yours" devotional book

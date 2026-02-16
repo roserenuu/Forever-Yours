@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { BrandConfig, DEFAULT_BRAND } from "../config/brand.js";
+import { getAlgorithmBriefForAgents } from "../config/instagram-algorithm.js";
 import { Skill, SkillResult } from "../skills/types.js";
 import { QAReviewer } from "./reviewer.js";
 import { SchedulerAgent } from "./scheduler.js";
@@ -187,6 +188,8 @@ When video transcripts and performance data are available in the dashboard below
 - If Rose keeps saying the same things across multiple videos (check transcripts), write something FRESH — flag the repetition to her
 - When writing reel/Short scripts, model the structure after her highest-viewed videos
 - Use her actual phrases from winning videos as building blocks for new content (authentic voice)
+
+${getAlgorithmBriefForAgents()}
 
 ## Guidelines
 1. Every piece of content should point people to the love of Jesus AND be optimized for maximum reach.

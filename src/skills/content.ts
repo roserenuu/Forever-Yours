@@ -1,4 +1,9 @@
 import { Skill, SkillContext, SkillResult } from "./types.js";
+import {
+  getCarouselAlgorithmTips,
+  getReelsAlgorithmTips,
+  getCaptionSEOTips,
+} from "../config/instagram-algorithm.js";
 
 export const loveNoteSkill: Skill = {
   name: "lovenote",
@@ -71,16 +76,17 @@ export const captionSkill: Skill = {
 
 Context: ${prompt}
 
+${getCaptionSEOTips()}
+
 Requirements:
 - Match the warm, intimate, devotional voice of Rose Renuu
 - Include a scripture reference
-- Include a call-to-action (save this, share with someone, tag a friend, comment below)
-- Add 15-20 relevant hashtags at the end (mix of faith hashtags and niche hashtags)
+- KEYWORD-RICH CAPTION: Write using natural, searchable phrases that people would type into Instagram search. Lead with the most important keywords. Instagram's AI reads captions for discovery — this is MORE important than hashtags now.
+- Include a strong call-to-action that drives DM SHARES (Mosseri confirmed DM sends are the #1 signal for reaching new audiences — 3-5x more valuable than likes). Use CTAs like "Send this to someone who needs it today", "Share this with a friend going through it", or "Save this for when you need a reminder". DM-share CTAs > generic "like this post".
+- MAX 5 hashtags at the end (Instagram's limit since Dec 2025 — Mosseri: "a few specific tags perform better than a long list"). Use: #JesusForeverYours + 2-3 niche tags + 1 trending tag. Rotate sets between posts.
 - Caption length: 150-300 words (Instagram sweet spot)
 - Use line breaks for readability
 - Include relevant emojis sparingly (1-3 max)
-
-Include hashtags like: #JesusForeverYours #ForeverYours #LoveNotes #FaithOverFear #ChristianContentCreator #GodIsGood #ScriptureOfTheDay #ChristianWomen #WalkByFaith
 
 Write ONLY the caption, nothing else.`
     );
@@ -89,9 +95,9 @@ Write ONLY the caption, nothing else.`
       title: "Instagram Caption",
       content: response,
       suggestions: [
-        "Best posting times: 9am, 12pm, or 7pm",
-        "Pair with a warm-toned aesthetic image",
-        "Cross-post to stories with a poll sticker",
+        "Best posting times: 9am, 12pm, or 7pm — no scheduling penalty (Mosseri confirmed)",
+        "Max 5 hashtags (Instagram limit Dec 2025). Keywords in captions = 30% more reach than hashtags",
+        "Optimize CTA for DM shares — 'Send this to someone' is 3-5x more valuable than likes (Mosseri)",
       ],
     };
   },
@@ -113,25 +119,33 @@ export const reelScriptSkill: Skill = {
 
 Concept: ${concept}
 
+${getReelsAlgorithmTips()}
+
 Format the script as:
-HOOK (first 3 seconds — must stop the scroll):
-[The opening line/visual]
+HOOK (first 1.7-3 seconds — Mosseri confirmed users decide to stay or scroll in 1.7 seconds. This is EVERYTHING):
+[The opening line/visual — must create an instant pattern interrupt. Bold statement, unexpected visual, or emotionally striking first frame. The algorithm measures watch time from this moment.]
 
 BODY (15-45 seconds):
 [Scene-by-scene breakdown with what to say and show]
+[Include text overlays with searchable keywords — Instagram's AI reads on-screen text for discovery]
+[Add retention hooks every 5-7 seconds to prevent drop-off]
 
 CLOSING (last 5 seconds):
-[Call to action + brand moment]
+[Call to action optimized for DM SHARES — "Send this to someone who needs to hear this" is more valuable than "like and follow". Mosseri: DM sends are 3-5x more important than likes for reaching new audiences.]
 
-CAPTION: [A short caption suggestion]
-AUDIO SUGGESTION: [Worship song or trending audio that fits]
+CAPTION: [Keyword-rich caption — Instagram's AI reads captions for discovery. Write using searchable phrases. Max 5 hashtags.]
+AUDIO SUGGESTION: [Worship song or trending audio that fits — NO songs with third-party watermarks]
 
 Requirements:
-- Keep it 30-60 seconds total
-- The hook MUST be attention-grabbing
+- Under 30 seconds if targeting NEW audiences (easier to watch completely = better algorithm signal)
+- 30-60 seconds if for EXISTING followers (higher total watch time)
+- Never exceed 90 seconds (3+ minutes = ineligible for recommendations per Mosseri)
+- The hook MUST stop the scroll in 1.7 seconds — this is the #1 factor
 - Match Rose's authentic, vulnerable, faith-filled style
 - Include at least one scripture reference
-- Make it emotionally resonant
+- Make it emotionally resonant — content people want to SEND to a friend
+- ORIGINAL content only — no recycled clips (Mosseri's Originality Score penalizes reposts)
+- No watermarks from TikTok/CapCut — Mosseri confirmed downranking
 
 Write ONLY the script, nothing else.`
     );
@@ -140,9 +154,10 @@ Write ONLY the script, nothing else.`
       title: "Reel Script",
       content: response,
       suggestions: [
-        "Film in natural lighting for the JFY aesthetic",
-        "Add text overlays for key scripture",
-        "Use a trending worship song as background",
+        "Film in natural lighting for the JFY aesthetic — lo-fi, authentic content outperforms overproduced (Mosseri 2026)",
+        "Add text overlays with searchable keywords — Instagram's AI reads on-screen text for discovery",
+        "Use Trial Reels to test this hook with non-followers before posting to your audience",
+        "Under 30 seconds for maximum new audience reach. No watermarks from other apps.",
       ],
     };
   },
@@ -205,33 +220,40 @@ export const carouselSkill: Skill = {
 
 Concept: ${concept}
 
+${getCarouselAlgorithmTips()}
+
 Write this in Rose Renuu's voice — warm, intimate, scripture-rooted, poetic but accessible.
 
 FORMAT — provide EVERY slide's content exactly as it should appear:
 
 SLIDE 1 (HOOK — must stop the scroll):
-Headline: [Bold, short, emotional — this is what makes someone swipe]
+Headline: [Bold, short, emotional — this is what makes someone swipe. Mosseri: carousels get a "second chance" mechanism where Instagram auto-shows slide 2 if they don't swipe. But slide 1 is still everything for the initial stop.]
 Subtext: [Optional 1-line teaser]
 
-SLIDE 2-6 (BODY — the heart of the message):
+SLIDE 2 (THE SECOND CHANCE SLIDE — Mosseri confirmed Instagram auto-shows this if someone doesn't swipe):
+- Must be VISUALLY DIFFERENT from slide 1 — different color, different layout, different energy
+- This is your second hook — make it as compelling as slide 1
+- Headline: [Short, punchy — draw them into the story]
+
+SLIDE 3-7 (BODY — the heart of the message):
 For each slide provide:
 - Headline: [Short, punchy — 3-8 words max]
 - Body: [1-3 sentences that expand on the headline]
 - Design note: [Brief direction — e.g., "scripture overlay", "handwritten feel", "bold text on soft background"]
 
-SLIDE 7 (SCRIPTURE):
+SLIDE 8 (SCRIPTURE):
 - Full verse text in NLT
 - Reference
 
-SLIDE 8 (CTA — call to action):
+SLIDE 9 (CTA — call to action):
 - A warm closing line
-- CTA: [Save, share, tag someone, comment, follow]
+- CTA: [Prioritize DM SHARE CTAs: "Send this to someone who needs it today" — Mosseri confirmed DM sends are 3-5x more valuable than likes for reaching new audiences. Also: save, tag someone.]
 
 ---
 
-CAPTION: [Full Instagram caption in Rose's voice, 150-250 words, with CTA and line breaks for readability]
+CAPTION: [Full Instagram caption in Rose's voice, 150-250 words. KEYWORD-RICH — write using searchable phrases people would type into Instagram search. Instagram's AI reads captions for discovery. Include a strong CTA that drives DM shares. Line breaks for readability.]
 
-HASHTAGS: [20 relevant hashtags including #JesusForeverYours #ForeverYours #LoveNotes]
+HASHTAGS: [MAX 5 — Instagram's limit since Dec 2025. Use: #JesusForeverYours + 2-3 niche tags + 1 trending tag. Rotate between posts.]
 
 DESIGN DIRECTION:
 - Color palette suggestion
@@ -239,12 +261,15 @@ DESIGN DIRECTION:
 - Overall mood/aesthetic
 
 Rules:
-- 7-10 slides total
+- 8-10 slides total (Mosseri data: 8-10 slides = peak engagement at 2.07%. Engagement dips after slide 3 then rises after slide 8 — reward the full swipe-through)
 - Each slide should be readable in 2-3 seconds
-- Build emotional momentum — hook → depth → scripture → action
+- Build emotional momentum — hook → second chance → depth → scripture → action
 - The carousel should tell a complete story or deliver a complete message
 - Match Rose's exact voice and tone throughout
 - Use NLT for scripture
+- Design each slide to STAND ALONE visually — people share individual slides to their Stories
+- Optimize for SAVES — educational/reference content drives highest save rates, which are weighted more than likes by the algorithm
+- The ultimate test (per Mosseri): "Would someone send this carousel to a friend in a DM?"
 
 Write ONLY the carousel content, nothing else.`
     );
@@ -254,8 +279,9 @@ Write ONLY the carousel content, nothing else.`
       content: response,
       suggestions: [
         "Copy each slide's text directly into your Canva template",
-        "Carousels get 3x more engagement than single posts — save rate is highest",
-        "Post between 9-11am or 7-9pm for best reach",
+        "Carousels get 4x more engagement than Reels — Mosseri confirmed they get a 'second chance' auto-show of slide 2",
+        "Aim for 8-10 slides (peak engagement). DM shares are 3-5x more valuable than likes for reach — optimize CTAs for sends",
+        "Use Trial Reels to test hook concepts before building full carousels",
       ],
     };
   },

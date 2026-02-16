@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { BrandConfig } from "../config/brand.js";
+import { getAlgorithmBriefForAgents } from "../config/instagram-algorithm.js";
 
 export class MarketerAgent {
   readonly name = "Zion";
@@ -55,6 +56,8 @@ When video transcripts and performance data are provided:
 - If a video about a specific topic went viral, create promo content that ties the product to that same topic
 - Avoid hooks/angles that flopped in recent videos — check the transcripts of low-performing content
 - Use Rose's actual words from high-performing videos as inspiration for promo copy (sounds more authentic)
+
+${getAlgorithmBriefForAgents()}
 
 ## Marketing Rules (NON-NEGOTIABLE)
 1. NEVER be salesy or pushy — Rose's audience will unfollow if they feel sold to

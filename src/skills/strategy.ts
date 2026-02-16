@@ -25,9 +25,10 @@ Provide:
    - Content type for each day (post, reel, story, carousel, live)
    - Theme/topic for each piece
    - Best posting time suggestion
-5. HASHTAG STRATEGY: [Campaign-specific + evergreen hashtags]
-6. ENGAGEMENT PLAN: [How to drive interaction — polls, Q&A, challenges]
-7. CROSS-PROMOTION: [How to tie in the devotional book, website, @roserenuu]
+5. HASHTAG & SEO STRATEGY: [Max 5 hashtags per post (Instagram limit since Dec 2025). Focus on keyword-rich captions instead — Instagram's AI reads captions for discovery. Mosseri confirmed hashtags don't boost reach anymore.]
+6. ENGAGEMENT PLAN: [How to drive DM SHARES — Mosseri confirmed DM sends are 3-5x more valuable than likes for reaching new audiences. Optimize every piece for shareability: "Would someone send this to a friend?"]
+7. ALGORITHM OPTIMIZATION: [Use Mosseri's 3 ranking factors: Watch Time (#1), DM Sends (#2), Likes Per Reach (#3). Carousels with 8-10 slides for peak engagement. Reels under 30 seconds for new audiences. Daily Stories for retention.]
+8. CROSS-PROMOTION: [How to tie in the devotional book, website, @roserenuu]
 
 Keep it practical and actionable. Rose is a one-person creator, so nothing too complex.
 

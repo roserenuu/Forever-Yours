@@ -1,4 +1,5 @@
 import { Skill, SkillContext, SkillResult } from "./types.js";
+import { getAlgorithmBriefForAgents } from "../config/instagram-algorithm.js";
 
 export const hooksSkill: Skill = {
   name: "hooks",
@@ -209,13 +210,17 @@ List 5-7 video/post formats that are currently getting massive reach. For each:
 - 5 types of audio trending right now (worship remixes, spoken word over lo-fi, trending secular songs with faith twist, etc.)
 - Suggest specific worship songs or audio styles to use
 
-## WHAT'S WORKING FOR FAITH CREATORS
+## WHAT'S WORKING FOR FAITH CREATORS (Informed by Adam Mosseri's Algorithm Insights)
 - Content patterns that top Christian creators are using to grow right now
-- What the algorithm is currently favoring (length, format, posting frequency)
-- Engagement tactics that boost reach in the faith niche
+- What the algorithm is currently favoring per Mosseri: Watch Time (#1), DM Sends (#2, weighted 3-5x more than likes), Likes Per Reach (#3)
+- Carousels with 8-10 slides (highest engagement format — 4x more than Reels). They get a "second chance" mechanism.
+- Reels under 30 seconds for new audiences, first 3 seconds are critical
+- Max 5 hashtags (Instagram limit Dec 2025) — keyword-rich captions instead (30% more reach)
+- Original content priority — Mosseri's Originality Score rewards creators, penalizes aggregators
+- Engagement tactics that boost DM shares (the #1 signal for reaching new audiences per Mosseri)
 
 ## PLATFORM-SPECIFIC TIPS
-- Instagram: What's getting pushed to Explore right now
+- Instagram: What's getting pushed to Explore right now (per Mosseri: original content, niche consistency, high engagement velocity, content that converts viewers to followers)
 - TikTok: What's landing on FYP in the faith space
 - YouTube Shorts: What's converting viewers to subscribers
 
@@ -271,10 +276,15 @@ Create a specific, actionable growth strategy:
 For each platform, provide:
 
 ### Instagram (144K → next milestone)
-- Posting frequency and best times
-- Content ratio (reels vs carousels vs stories vs lives)
-- Specific tactics to break past the 150K-200K plateau
-- How to increase saves and shares (the metrics that matter most)
+- Use Adam Mosseri's confirmed ranking factors: Watch Time (#1), DM Sends per Reach (#2 — 3-5x more valuable than likes), Likes per Reach (#3)
+- Posting frequency: 3-5 feed posts/week (prioritize carousels), 2-4 Reels/week, 5-7 Stories/day (Mosseri confirmed this prevents unfollows)
+- Content ratio: Carousels are the engagement engine (4x more engagement than Reels). Reels are the growth engine (new followers). Both are essential.
+- Carousels: 8-10 slides for peak engagement. Instagram's "second chance" mechanism auto-shows slide 2 if they don't swipe.
+- Specific tactics to break past the 150K-200K plateau using Mosseri's algorithm intelligence
+- How to increase DM SHARES and saves — these are THE metrics that matter (Mosseri confirmed). Likes are secondary.
+- Max 5 hashtags per post (Instagram limit Dec 2025). Keyword-rich captions instead — 30% more reach.
+- Use Trial Reels to test hooks with non-followers
+- Original content only — Mosseri's Originality Score penalizes reposts (aggregators lost 60-80% reach)
 - Collaboration and cross-promotion strategies
 
 ### TikTok (56K → next milestone)

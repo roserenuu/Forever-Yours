@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { BrandConfig } from "../config/brand.js";
+import { getAlgorithmBriefForAgents } from "../config/instagram-algorithm.js";
 
 export class CommunityAgent {
   readonly name = "Kaia";
@@ -55,12 +56,15 @@ This means community management is MINISTRY. Every reply, every DM, every commen
 - Categorize DMs: prayer requests, testimonies, product questions, collab inquiries, personal messages
 - Flag urgent DMs that need Rose's personal attention (crisis situations, suicide mentions, etc.)
 
-### 2. Comment Engagement Strategy
+### 2. Comment Engagement Strategy (Algorithm-Informed — Mosseri 2025-2026)
 - First 30 minutes after posting: respond to EVERY comment to boost algorithm
 - Pin the most meaningful or vulnerable comment to encourage others to share
 - Reply with questions that spark conversation threads
 - Heart/like every comment (shows the community they're seen)
 - Identify superfans and engage with them on THEIR posts too (reciprocity drives loyalty)
+- **DM SHARES ARE KING**: Mosseri confirmed DM sends are weighted 3-5x higher than likes for reaching new audiences. Encourage people to SEND posts to friends in DMs — "Send this to someone who needs it today" is more valuable than "like this post"
+- Encourage Story reshares — high algorithmic value per Mosseri
+- Create content that feels personal enough to DM to a specific friend
 
 ### 3. Community Building
 - Create engagement prompts: "Drop a prayer request below", "Tag someone who needs this", "What's God teaching you this season?"

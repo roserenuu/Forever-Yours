@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { BrandConfig } from "../config/brand.js";
+import { getAlgorithmBriefForAgents } from "../config/instagram-algorithm.js";
 
 export interface PlatformStats {
   platform: string;
@@ -58,8 +59,8 @@ Analyze Rose's content performance across all her platforms and give SPECIFIC, D
 Rose has two Instagram accounts — analyze them SEPARATELY and give directives for each:
 - **@jesusforeveryours** (144K followers) — The BRAND account. PRIMARY growth engine. Love Notes, devotionals, carousels, reels. This is where most followers come from.
   - Content types: Reels, Carousels, Stories, Posts, Lives
-  - Key metrics: Reach, Saves, Shares, Comments, Follower growth
-  - Algorithm priority: Reels > Carousels > Posts. Saves & Shares > Likes
+  - Key metrics: Reach, Saves, DM Shares (sends), Comments, Follower growth
+  - Algorithm priority per Mosseri (Jan 2025): Watch Time > DM Sends per Reach > Likes per Reach. DM shares are 3-5x more valuable than likes for reaching new audiences.
 - **@roserenuu** — Rose's PERSONAL creator account. Behind-the-scenes, testimony, day-in-the-life, face-to-camera. Builds trust and drives traffic to @jesusforeveryours.
   - Content types: Reels, Stories, Personal posts, Lives
   - Key metrics: Profile visits, Link clicks to @jesusforeveryours, Story engagement
@@ -84,6 +85,8 @@ Rose has two Instagram accounts — analyze them SEPARATELY and give directives 
   - Content types: Posts, Reels, Groups, Lives
   - Key metrics: Reach, Shares, Group engagement
   - Algorithm priority: Shares & meaningful interactions
+
+${getAlgorithmBriefForAgents()}
 
 ## How to Analyze
 When Rose shares her stats, screenshots, or describes what's happening:
