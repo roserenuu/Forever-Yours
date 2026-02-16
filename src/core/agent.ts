@@ -10,7 +10,7 @@ import { AdCopyAgent } from "./ad-copy.js";
 import { EmailMarketingAgent } from "./email-marketing.js";
 import { CommunityAgent } from "./community.js";
 import { PartnershipsAgent } from "./partnerships.js";
-import { DesignerAgent } from "./designer.js";
+import { DesignerAgent, DesignResult } from "./designer.js";
 import { DataStore } from "./datastore.js";
 import { CsvImporter } from "./csv-import.js";
 import { ConnectorManager } from "./connectors.js";
@@ -26,6 +26,11 @@ export interface AgentOptions {
   model?: string;
   maxTokens?: number;
   enableReviewer?: boolean;
+}
+
+export interface ChatResponse {
+  text: string;
+  files?: string[];
 }
 
 export class ForeverYoursAgent {
@@ -133,8 +138,9 @@ You are Eden — Rose's personal content machine. When she asks for content, giv
 - **Lyra** (Email Marketing) — builds email sequences, newsletters, automations, and list-building strategies. Rose uses /emails to talk to her.
 - **Kaia** (Community Manager) — manages DM responses, comment strategy, follower relationships, and community growth. Rose uses /community to talk to her.
 - **Nova** (Partnerships) — handles brand deals, creator collabs, sponsorships, and strategic partnerships. Rose uses /partners to talk to her.
-- **Iris** (Visual Designer) — creates actual PNG graphics: carousels, quote graphics, story slides, thumbnails. Rose uses /design to talk to her. Files are saved to the designs/ folder ready to upload.
-You handle all creative content. If Rose asks about scheduling, remind her to use /schedule. If she asks about organic product promos, remind her to use /promote. If she asks about paid ads, remind her to use /ads. If she asks about email marketing or newsletters, remind her to use /emails. If she asks about community engagement or DMs, remind her to use /community. If she asks about brand deals or collabs, remind her to use /partners. If she asks about what's working or analytics, remind her to use /insights. If she asks about creating graphics, images, or designs, remind her to use /design.
+- **Iris** (Visual Designer) — creates actual PNG graphics: carousels, quote graphics, story slides, thumbnails. Rose uses /design to talk to her. Files are saved to the designs/ folder AND sent directly in chat as image attachments.
+You handle all creative content. If Rose asks about scheduling, remind her to use /schedule. If she asks about organic product promos, remind her to use /promote. If she asks about paid ads, remind her to use /ads. If she asks about email marketing or newsletters, remind her to use /emails. If she asks about community engagement or DMs, remind her to use /community. If she asks about brand deals or collabs, remind her to use /partners. If she asks about what's working or analytics, remind her to use /insights. If she asks about creating graphics, images, designs, or pictures, remind her to use /design — Iris will generate the images and send them directly in chat.
+IMPORTANT: You CAN send images! When Rose asks for pictures, images, graphics, or designs, tell her to use /design and Iris will create and send actual PNG images right here in the chat.
 
 ## Rose Renuu's Voice — Study This Carefully
 Rose writes Love Notes as if God Himself is speaking directly to one person — His child. Her writing is:
@@ -213,7 +219,7 @@ ${this.dataStore.getTranscriptBrief()}
 ${this.dataStore.getDirectiveForAgent("eden")}`;
   }
 
-  async chat(userMessage: string): Promise<string> {
+  async chat(userMessage: string): Promise<ChatResponse> {
     // Route to specialized agents first
     const skillMatch = userMessage.match(/^\/(\w+)\s*(.*)/s);
     if (skillMatch) {
@@ -223,32 +229,32 @@ ${this.dataStore.getDirectiveForAgent("eden")}`;
       if (skillName === "sync") {
         const input = skillInput.trim();
         if (!input) {
-          return `**How to sync your data**\n\nPaste your stats in any of these formats:\n\n**Platform stats:**\n\`instagram 145000 followers\`\n\`tiktok 58000 followers reach 500000\`\n\`youtube 9000 subs engagement 4.5%\`\n\n**Content performance:**\n\`reel identity in Christ 50000 reach 2000 saves 500 shares\`\n\`carousel love notes 30000 reach 5000 saves\`\n\n**Multiple lines at once:**\n\`\`\`\ninstagram 145000 followers reach 800000\ntiktok 58000 followers\nreel identity reel 50000 views 2000 likes\ncarousel healing series 30000 reach 5000 saves\n\`\`\`\n\nYour data is saved locally and every agent reads it automatically.`;
+          return { text: `**How to sync your data**\n\nPaste your stats in any of these formats:\n\n**Platform stats:**\n\`instagram 145000 followers\`\n\`tiktok 58000 followers reach 500000\`\n\`youtube 9000 subs engagement 4.5%\`\n\n**Content performance:**\n\`reel identity in Christ 50000 reach 2000 saves 500 shares\`\n\`carousel love notes 30000 reach 5000 saves\`\n\n**Multiple lines at once:**\n\`\`\`\ninstagram 145000 followers reach 800000\ntiktok 58000 followers\nreel identity reel 50000 views 2000 likes\ncarousel healing series 30000 reach 5000 saves\n\`\`\`\n\nYour data is saved locally and every agent reads it automatically.` };
         }
         console.log("[DataStore] Syncing your data...");
         const results = this.dataStore.parseAndSync(input);
-        return `**Data Synced**\n\n${results}\n\nAll agents now have access to your latest data. Use \`/stats\` to see everything or \`/insights\` for Navi's analysis.`;
+        return { text: `**Data Synced**\n\n${results}\n\nAll agents now have access to your latest data. Use \`/stats\` to see everything or \`/insights\` for Navi's analysis.` };
       }
 
       // /stats — View your current data dashboard
       if (skillName === "stats") {
-        return `**Your Brand Dashboard**\n\n${this.dataStore.getSummaryForAgents()}`;
+        return { text: `**Your Brand Dashboard**\n\n${this.dataStore.getSummaryForAgents()}` };
       }
 
       // /dashboard — Visual analytics dashboard
       if (skillName === "dashboard") {
-        return this.dashboard.render();
+        return { text: this.dashboard.render() };
       }
 
       // /import — Import CSV analytics exports
       if (skillName === "import") {
         const filePath = skillInput.trim();
         if (!filePath) {
-          return `**Import Analytics CSV**\n\nUsage: \`/import path/to/file.csv\`\n\nExport analytics from your platform dashboards:\n- **Instagram**: Professional Dashboard > Insights > Export\n- **YouTube**: Studio > Analytics > Advanced Mode > Export\n- **TikTok**: Analytics > Export Data\n- **X**: Analytics > Export\n- **Facebook**: Insights > Export\n\nThe importer auto-detects which platform the CSV is from.`;
+          return { text: `**Import Analytics CSV**\n\nUsage: \`/import path/to/file.csv\`\n\nExport analytics from your platform dashboards:\n- **Instagram**: Professional Dashboard > Insights > Export\n- **YouTube**: Studio > Analytics > Advanced Mode > Export\n- **TikTok**: Analytics > Export Data\n- **X**: Analytics > Export\n- **Facebook**: Insights > Export\n\nThe importer auto-detects which platform the CSV is from.` };
         }
         console.log("[DataStore] Importing CSV...");
         const result = this.csvImporter.importFile(filePath);
-        return `**CSV Import Complete**\n\n${result}\n\nUse \`/dashboard\` to see your updated analytics or \`/insights\` for Navi's analysis.`;
+        return { text: `**CSV Import Complete**\n\n${result}\n\nUse \`/dashboard\` to see your updated analytics or \`/insights\` for Navi's analysis.` };
       }
 
       // /fetch — Pull live data from connected APIs
@@ -257,18 +263,18 @@ ${this.dataStore.getDirectiveForAgent("eden")}`;
         if (platform) {
           console.log(`[Connectors] Fetching ${platform} data...`);
           const result = await this.connectors.fetchOne(platform);
-          return `**API Fetch**\n\n${result}`;
+          return { text: `**API Fetch**\n\n${result}` };
         }
         console.log("[Connectors] Fetching all connected platforms...");
         const result = await this.connectors.fetchAll();
-        return `**API Fetch**\n\n${result}`;
+        return { text: `**API Fetch**\n\n${result}` };
       }
 
       // /connect — Show connection status and setup guide
       if (skillName === "connect") {
         const status = this.connectors.getStatus();
         const guide = this.connectors.getSetupGuide();
-        return `${status}\n\n---\n\n${guide}`;
+        return { text: `${status}\n\n---\n\n${guide}` };
       }
 
       // Mara (Scheduler) handles /schedule — inject live data + transcripts + Navi's directives
@@ -282,7 +288,7 @@ ${this.dataStore.getDirectiveForAgent("eden")}`;
           `${skillInput.trim()}\n\n${fullContext}`
         );
         console.log("[Mara] Calendar ready — sending to Rose.");
-        return `**Mara's Content Calendar**\n\n${plan}`;
+        return { text: `**Mara's Content Calendar**\n\n${plan}` };
       }
 
       // Navi (Analytics) handles /insights — inject live data + transcripts
@@ -308,7 +314,7 @@ ${this.dataStore.getDirectiveForAgent("eden")}`;
         this.saveNaviDirectives(insights);
         console.log("[Navi] Insights saved — all agents now have updated directives.");
 
-        return `**Navi's Insights Report**\n\n${insights}`;
+        return { text: `**Navi's Insights Report**\n\n${insights}` };
       }
 
       // Zion (Marketing) handles /promote — inject live data + transcripts + Navi's directives
@@ -322,7 +328,7 @@ ${this.dataStore.getDirectiveForAgent("eden")}`;
           `${skillInput.trim() || "Forever Yours devotional book"}\n\n${fullContext}`
         );
         console.log("[Zion] Promo ready — sending to Rose.");
-        return `**Zion's Marketing Plan**\n\n${promo}`;
+        return { text: `**Zion's Marketing Plan**\n\n${promo}` };
       }
 
       // Adara (Ad Copy) handles /ads — inject live data + transcripts + Navi's directives
@@ -336,7 +342,7 @@ ${this.dataStore.getDirectiveForAgent("eden")}`;
           `${skillInput.trim() || "Forever Yours devotional book — drive sales"}\n\n${fullContext}`
         );
         console.log("[Adara] Ad campaign ready — sending to Rose.");
-        return `**Adara's Ad Campaign**\n\n${ad}`;
+        return { text: `**Adara's Ad Campaign**\n\n${ad}` };
       }
 
       // Lyra (Email Marketing) handles /emails — inject live data + transcripts + Navi's directives
@@ -350,7 +356,7 @@ ${this.dataStore.getDirectiveForAgent("eden")}`;
           `${skillInput.trim() || "weekly devotional newsletter"}\n\n${fullContext}`
         );
         console.log("[Lyra] Email content ready — sending to Rose.");
-        return `**Lyra's Email Strategy**\n\n${email}`;
+        return { text: `**Lyra's Email Strategy**\n\n${email}` };
       }
 
       // Kaia (Community) handles /community — inject live data + Navi's directives
@@ -363,7 +369,7 @@ ${this.dataStore.getDirectiveForAgent("eden")}`;
           `${skillInput.trim() || "general community engagement strategy"}\n\n${fullContext}`
         );
         console.log("[Kaia] Community plan ready — sending to Rose.");
-        return `**Kaia's Community Plan**\n\n${engagement}`;
+        return { text: `**Kaia's Community Plan**\n\n${engagement}` };
       }
 
       // Nova (Partnerships) handles /partners — inject live data + Navi's directives
@@ -376,7 +382,7 @@ ${this.dataStore.getDirectiveForAgent("eden")}`;
           `${skillInput.trim() || "find brand partnership opportunities"}\n\n${fullContext}`
         );
         console.log("[Nova] Partnership strategy ready — sending to Rose.");
-        return `**Nova's Partnership Strategy**\n\n${partnership}`;
+        return { text: `**Nova's Partnership Strategy**\n\n${partnership}` };
       }
 
       // Iris (Designer) handles /design — creates actual PNG graphics
@@ -386,14 +392,14 @@ ${this.dataStore.getDirectiveForAgent("eden")}`;
           skillInput.trim() || "Create a Love Note quote graphic for Instagram"
         );
         console.log("[Iris] Graphics ready — check the designs/ folder.");
-        return result;
+        return { text: result.text, files: result.files };
       }
 
       // Eden handles all other skills
       const skill = this.skills.get(skillName);
       if (skill) {
         const result = await this.executeSkill(skill, skillInput.trim());
-        return this.formatSkillResult(result);
+        return { text: this.formatSkillResult(result) };
       }
     }
 
@@ -428,7 +434,7 @@ ${this.dataStore.getDirectiveForAgent("eden")}`;
       content: assistantMessage,
     });
 
-    return assistantMessage;
+    return { text: assistantMessage };
   }
 
   /**
@@ -482,7 +488,8 @@ ${this.dataStore.getDirectiveForAgent("eden")}`;
   }
 
   async generateContent(prompt: string): Promise<string> {
-    return this.chat(prompt);
+    const response = await this.chat(prompt);
+    return response.text;
   }
 
   clearHistory(): void {

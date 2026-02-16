@@ -1,4 +1,5 @@
 import * as Discord from "discord.js";
+import { AttachmentBuilder } from "discord.js";
 import { Channel, OutgoingMessage } from "./types.js";
 import { ForeverYoursAgent } from "../core/agent.js";
 
@@ -68,14 +69,34 @@ export class DiscordChannel implements Channel {
         }
         const response = await this.agent!.chat(content);
 
+        // Build attachments from any generated image files
+        const attachments: AttachmentBuilder[] = [];
+        if (response.files?.length) {
+          for (const filePath of response.files) {
+            try {
+              attachments.push(new AttachmentBuilder(filePath));
+            } catch (err) {
+              console.error(`[Discord] Could not attach file ${filePath}:`, err);
+            }
+          }
+        }
+
         // Discord has a 2000 char limit
-        if (response.length <= 2000) {
-          await message.reply(response);
+        if (response.text.length <= 2000) {
+          await message.reply({
+            content: response.text,
+            files: attachments,
+          });
         } else {
-          const chunks = this.splitMessage(response);
-          for (const chunk of chunks) {
+          const chunks = this.splitMessage(response.text);
+          for (let i = 0; i < chunks.length; i++) {
             if ("send" in channel) {
-              await channel.send(chunk);
+              // Attach images to the last text chunk
+              if (i === chunks.length - 1 && attachments.length > 0) {
+                await channel.send({ content: chunks[i], files: attachments });
+              } else {
+                await channel.send(chunks[i]);
+              }
             }
           }
         }

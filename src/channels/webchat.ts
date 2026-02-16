@@ -53,7 +53,8 @@ export class WebChatChannel implements Channel {
           ws.send(
             JSON.stringify({
               type: "message",
-              content: response,
+              content: response.text,
+              files: response.files,
               from: "Forever Yours",
             })
           );

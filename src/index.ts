@@ -66,7 +66,14 @@ async function main() {
       try {
         console.log("  ...\n");
         const response = await agent.chat(trimmed);
-        console.log(`  Eden: ${response}\n`);
+        console.log(`  Eden: ${response.text}\n`);
+        if (response.files?.length) {
+          console.log(`  [Iris] Generated ${response.files.length} image(s):`);
+          for (const f of response.files) {
+            console.log(`    → ${f}`);
+          }
+          console.log();
+        }
       } catch (error: any) {
         console.error(`  Error: ${error.message}\n`);
       }

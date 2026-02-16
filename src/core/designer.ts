@@ -87,6 +87,7 @@ export interface DesignRequest {
 }
 
 export interface DesignResult {
+  text: string;
   files: string[];
   designBrief: string;
 }
@@ -119,7 +120,7 @@ export class DesignerAgent {
    * Main entry: takes a content request, generates design brief via AI,
    * then renders the actual images.
    */
-  async design(briefOrContext: string): Promise<string> {
+  async design(briefOrContext: string): Promise<DesignResult> {
     // Step 1: Ask AI to create a structured design plan
     const designPlan = await this.generateDesignPlan(briefOrContext);
 
@@ -229,7 +230,7 @@ You MUST respond with a JSON design plan. This is what gets rendered into actual
     return response.content[0].type === "text" ? response.content[0].text : "";
   }
 
-  private async renderFromPlan(planText: string): Promise<string> {
+  private async renderFromPlan(planText: string): Promise<DesignResult> {
     // Extract JSON from the response
     const jsonMatch = planText.match(/```json\s*([\s\S]*?)\s*```/);
     if (!jsonMatch) {
@@ -238,7 +239,7 @@ You MUST respond with a JSON design plan. This is what gets rendered into actual
         const plan = JSON.parse(planText);
         return this.renderDesign(plan, planText);
       } catch {
-        return `**Iris's Design Brief**\n\n${planText}\n\n*Note: Could not auto-generate images from this plan. Use the brief above to create in Canva.*`;
+        return { text: `**Iris's Design Brief**\n\n${planText}\n\n*Note: Could not auto-generate images from this plan. Use the brief above to create in Canva.*`, files: [], designBrief: planText };
       }
     }
 
@@ -246,7 +247,7 @@ You MUST respond with a JSON design plan. This is what gets rendered into actual
       const plan = JSON.parse(jsonMatch[1]);
       return this.renderDesign(plan, planText);
     } catch (err) {
-      return `**Iris's Design Brief**\n\n${planText}\n\n*Note: JSON parsing failed — use the brief above to create in Canva.*`;
+      return { text: `**Iris's Design Brief**\n\n${planText}\n\n*Note: JSON parsing failed — use the brief above to create in Canva.*`, files: [], designBrief: planText };
     }
   }
 
@@ -266,7 +267,7 @@ You MUST respond with a JSON design plan. This is what gets rendered into actual
       designNotes?: string;
     },
     rawPlan: string
-  ): Promise<string> {
+  ): Promise<DesignResult> {
     const dims = this.getDimensions(plan.type);
     const theme = this.getTheme(plan.theme || "light");
     const timestamp = Date.now();
@@ -319,7 +320,7 @@ You MUST respond with a JSON design plan. This is what gets rendered into actual
     }
     response += `\n**Ready to post!** Upload these directly to Instagram, no editing needed.`;
 
-    return response;
+    return { text: response, files, designBrief: rawPlan };
   }
 
   private getDimensions(type: string): { width: number; height: number } {
