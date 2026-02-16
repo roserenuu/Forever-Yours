@@ -1,5 +1,7 @@
 import * as Discord from "discord.js";
 import { AttachmentBuilder, Partials } from "discord.js";
+import * as fs from "fs";
+import * as path from "path";
 import { Channel, OutgoingMessage } from "./types.js";
 import { ForeverYoursAgent } from "../core/agent.js";
 
@@ -75,7 +77,13 @@ export class DiscordChannel implements Channel {
         if (response.files?.length) {
           for (const filePath of response.files) {
             try {
-              attachments.push(new AttachmentBuilder(filePath));
+              if (!fs.existsSync(filePath)) {
+                console.error(`[Discord] File not found: ${filePath}`);
+                continue;
+              }
+              const buffer = fs.readFileSync(filePath);
+              const filename = path.basename(filePath);
+              attachments.push(new AttachmentBuilder(buffer, { name: filename }));
             } catch (err) {
               console.error(`[Discord] Could not attach file ${filePath}:`, err);
             }
