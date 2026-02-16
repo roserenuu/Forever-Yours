@@ -420,12 +420,15 @@ ${this.dataStore.getDirectiveForAgent("eden")}`;
     }
 
     // Scrub any past "I can't make images" responses from history to prevent poisoning
+    // Note: AI outputs curly quotes (\u2019) not straight quotes — must match both
+    const apos = `[''\u2018\u2019]`; // matches any apostrophe style
     const imageDenialPatterns = [
-      /can'?t (actually )?(create|design|generate|make|send).{0,30}(image|graphic|picture|visual)/i,
-      /cannot (actually )?(create|design|generate|make|send).{0,30}(image|graphic|picture|visual)/i,
-      /don'?t have.{0,20}(image generation|graphic design)/i,
-      /I'?m (a )?(text-based|text based)/i,
+      new RegExp(`can${apos}?t.{0,20}(create|design|generate|make|send).{0,30}(image|graphic|picture|visual)`, "i"),
+      /cannot.{0,20}(create|design|generate|make|send).{0,30}(image|graphic|picture|visual)/i,
+      new RegExp(`don${apos}?t have.{0,20}(image generation|graphic design)`, "i"),
+      new RegExp(`I${apos}?m (a )?(text-based|text based)`, "i"),
       /not.{0,10}(image|graphic) generation/i,
+      new RegExp(`can${apos}?t generate actual images`, "i"),
     ];
     this.conversationHistory = this.conversationHistory.filter((msg) => {
       if (msg.role !== "assistant" || typeof msg.content !== "string") return true;
@@ -445,21 +448,23 @@ ${this.dataStore.getDirectiveForAgent("eden")}`;
       response.content[0].type === "text" ? response.content[0].text : "";
 
     // Safety net: if Eden still says she can't make images, intercept and route to Iris
+    // Use simple keyword detection — curly quotes (\u2019) broke all previous regex attempts
+    const responseLC = assistantMessage.toLowerCase().replace(/[\u2018\u2019'']/g, "'");
     const cantMakeImages = [
-      /can'?t (actually )?(create|design|generate|make|send|produce)/i,
-      /cannot (actually )?(create|design|generate|make|send|produce)/i,
-      /don'?t have (the )?(ability|capability|capabilities)/i,
+      /can'?t.{0,20}(create|design|generate|make|send|produce).{0,20}(image|graphic|picture|visual|png)/i,
+      /cannot.{0,20}(create|design|generate|make|send|produce)/i,
+      /don'?t have.{0,20}(ability|capability|capabilities|image generation)/i,
       /not able to (create|design|generate|make|send)/i,
       /unable to (create|design|generate|make|send)/i,
-      /I'?m (a )?(text-based|text based)/i,
-      /don'?t have image generation/i,
-      /no (image|graphic|design) (generation|creation|capabilities)/i,
-      /can'?t actually design graphics/i,
-      /I can only write/i,
+      /i'm (a )?(text-based|text based)/i,
+      /i can only write/i,
       /hire a.{0,20}(graphic designer|designer)/i,
       /use.{0,15}(canva|midjourney|dall-?e)/i,
+      /can'?t generate actual image/i,
+      /don'?t have image generation/i,
+      /i create the words.{0,30}but/i,
     ];
-    const looksLikeImageDenial = cantMakeImages.some((rx) => rx.test(assistantMessage));
+    const looksLikeImageDenial = cantMakeImages.some((rx) => rx.test(responseLC));
     if (looksLikeImageDenial) {
       console.log("[Eden] Caught image-denial response — routing to Iris instead...");
       // Remove the poisoned conversation entry and replace with a corrected one
