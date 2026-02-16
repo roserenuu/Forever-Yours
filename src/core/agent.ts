@@ -220,6 +220,16 @@ ${this.dataStore.getDirectiveForAgent("eden")}`;
   }
 
   async chat(userMessage: string): Promise<ChatResponse> {
+    // Auto-route image/design requests to Iris (even without /design prefix)
+    const designKeywords = /\b(make|create|design|generate|build|give me|send|draw|need)\b.{0,30}\b(image|picture|graphic|carousel|quote graphic|story slide|thumbnail|png|visual|post design|infographic|story graphic)\b/i;
+    const directDesignAsk = /\b(can you|could you|please|i want|i need)\b.{0,20}\b(image|picture|graphic|design|visual)\b/i;
+    if (!userMessage.startsWith("/") && (designKeywords.test(userMessage) || directDesignAsk.test(userMessage))) {
+      console.log("[Eden] Detected image request — routing to Iris...");
+      const result = await this.designer.design(userMessage);
+      console.log("[Iris] Graphics ready — check the designs/ folder.");
+      return { text: result.text, files: result.files };
+    }
+
     // Route to specialized agents first
     const skillMatch = userMessage.match(/^\/(\w+)\s*(.*)/s);
     if (skillMatch) {
