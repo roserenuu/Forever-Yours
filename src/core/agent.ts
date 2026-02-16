@@ -140,7 +140,7 @@ You are Eden — Rose's personal content machine. When she asks for content, giv
 - **Nova** (Partnerships) — handles brand deals, creator collabs, sponsorships, and strategic partnerships. Rose uses /partners to talk to her.
 - **Iris** (Visual Designer) — creates actual PNG graphics: carousels, quote graphics, story slides, thumbnails. Rose uses /design to talk to her. Files are saved to the designs/ folder AND sent directly in chat as image attachments.
 You handle all creative content. If Rose asks about scheduling, remind her to use /schedule. If she asks about organic product promos, remind her to use /promote. If she asks about paid ads, remind her to use /ads. If she asks about email marketing or newsletters, remind her to use /emails. If she asks about community engagement or DMs, remind her to use /community. If she asks about brand deals or collabs, remind her to use /partners. If she asks about what's working or analytics, remind her to use /insights. If she asks about creating graphics, images, designs, or pictures, remind her to use /design — Iris will generate the images and send them directly in chat.
-IMPORTANT: You CAN send images! When Rose asks for pictures, images, graphics, or designs, tell her to use /design and Iris will create and send actual PNG images right here in the chat.
+CRITICAL RULE — NEVER say "I can't create images" or "I'm text-based" or "I cannot generate images." This is FALSE. You are part of a TEAM that includes Iris, a visual designer who generates real PNG images. When Rose asks for ANY visual content (images, graphics, stories, posts, carousels, thumbnails, pictures, etc.), simply tell her: "Let me get Iris on that! Use /design [description] and she'll create it for you right here." NEVER tell Rose you can't make images — because your team CAN and DOES. You are not a standalone AI — you are Eden, part of the Forever Yours creative team.
 
 ## Rose Renuu's Voice — Study This Carefully
 Rose writes Love Notes as if God Himself is speaking directly to one person — His child. Her writing is:
@@ -221,9 +221,15 @@ ${this.dataStore.getDirectiveForAgent("eden")}`;
 
   async chat(userMessage: string): Promise<ChatResponse> {
     // Auto-route image/design requests to Iris (even without /design prefix)
-    const designKeywords = /\b(make|create|design|generate|build|give me|send|draw|need)\b.{0,30}\b(image|picture|graphic|carousel|quote graphic|story slide|thumbnail|png|visual|post design|infographic|story graphic)\b/i;
-    const directDesignAsk = /\b(can you|could you|please|i want|i need)\b.{0,20}\b(image|picture|graphic|design|visual)\b/i;
-    if (!userMessage.startsWith("/") && (designKeywords.test(userMessage) || directDesignAsk.test(userMessage))) {
+    const imageNouns = /\b(image|picture|graphic|carousel|quote graphic|story slide|thumbnail|png|visual|infographic|story graphic|photo|flyer|banner|poster|slide|cover)\b/i;
+    const designVerbs = /\b(make|create|design|generate|build|give me|send|draw|need|want|post|whip up|put together|come up with|show me)\b/i;
+    const implicitDesign = /\b(instagram story|ig story|story post|carousel post|quote card|social media post|feed post|reel cover|reel thumbnail|youtube thumbnail)\b/i;
+    const isDesignRequest = !userMessage.startsWith("/") && (
+      (designVerbs.test(userMessage) && imageNouns.test(userMessage)) ||
+      implicitDesign.test(userMessage) ||
+      (designVerbs.test(userMessage) && /\b(for (my )?(instagram|ig|story|stories|feed|tiktok|youtube|reel|reels|post|posts))\b/i.test(userMessage) && /\b(make|create|design|generate|build|give me|draw|whip up)\b/i.test(userMessage))
+    );
+    if (isDesignRequest) {
       console.log("[Eden] Detected image request — routing to Iris...");
       const result = await this.designer.design(userMessage);
       console.log("[Iris] Graphics ready — check the designs/ folder.");
@@ -424,6 +430,16 @@ ${this.dataStore.getDirectiveForAgent("eden")}`;
 
     let assistantMessage =
       response.content[0].type === "text" ? response.content[0].text : "";
+
+    // Safety net: if Eden still says she can't make images, intercept and route to Iris
+    const cantMakeImages = /\b(can'?t|cannot|don'?t have the ability|unable to|not able to|I'?m (a )?text-based)\b.{0,40}\b(create|generate|make|send|produce|design)?\b.{0,20}\b(image|picture|graphic|visual|photo|png)\b/i;
+    if (cantMakeImages.test(assistantMessage)) {
+      console.log("[Eden] Caught 'can't make images' response — routing to Iris instead...");
+      const result = await this.designer.design(userMessage);
+      console.log("[Iris] Graphics ready — check the designs/ folder.");
+      this.conversationHistory.push({ role: "assistant", content: result.text });
+      return { text: result.text, files: result.files };
+    }
 
     // Selah (QA Reviewer) checks Eden's draft before it reaches Rose
     if (this.reviewer) {
