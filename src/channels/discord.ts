@@ -1,5 +1,5 @@
 import * as Discord from "discord.js";
-import { AttachmentBuilder } from "discord.js";
+import { AttachmentBuilder, Partials } from "discord.js";
 import { Channel, OutgoingMessage } from "./types.js";
 import { ForeverYoursAgent } from "../core/agent.js";
 
@@ -22,6 +22,7 @@ export class DiscordChannel implements Channel {
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.DirectMessages,
       ],
+      partials: [Partials.Channel],
     });
   }
 
