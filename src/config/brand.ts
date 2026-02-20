@@ -136,7 +136,7 @@ I am with you always, even to the end of the age. Matthew 28:20 NLT`,
 
   platforms: {
     instagram: {
-      handle: "roserenuu",
+      handle: "jesusforeveryours",
       creatorHandle: "roserenuu",
     },
     website: "https://jesusforeveryours.com",

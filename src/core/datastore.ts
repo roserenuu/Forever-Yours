@@ -317,16 +317,16 @@ export class DataStore {
         const platform = this.normalizePlatform(rawPlatform);
         const stats: Partial<PlatformSnapshot> = {};
 
-        // Parse followers
+        // Parse followers (capture K/M suffix inside group so parseNumber can apply multiplier)
         const followersMatch = rest.match(
-          /(\d[\d,.]*)\s*[kK]?\s*(followers|subs|subscribers)?/
+          /(\d[\d,.]*\s*[kKmM]?)\s*(followers|subs|subscribers)?/
         );
         if (followersMatch) {
           stats.followers = this.parseNumber(followersMatch[1]);
         }
 
         // Parse reach
-        const reachMatch = rest.match(/reach[:\s]*(\d[\d,.]*)\s*[kK]?/i);
+        const reachMatch = rest.match(/reach[:\s]*(\d[\d,.]*\s*[kKmM]?)/i);
         if (reachMatch) {
           stats.reach = this.parseNumber(reachMatch[1]);
         }
@@ -367,23 +367,23 @@ export class DataStore {
         }
 
         // Extract numbers
-        const reachMatch = rest.match(/(\d[\d,.]*)\s*[kK]?\s*reach/i);
+        const reachMatch = rest.match(/(\d[\d,.]*\s*[kKmM]?)\s*reach/i);
         if (reachMatch) content.reach = this.parseNumber(reachMatch[1]);
 
-        const viewsMatch = rest.match(/(\d[\d,.]*)\s*[kK]?\s*views/i);
+        const viewsMatch = rest.match(/(\d[\d,.]*\s*[kKmM]?)\s*views/i);
         if (viewsMatch) content.views = this.parseNumber(viewsMatch[1]);
 
-        const likesMatch = rest.match(/(\d[\d,.]*)\s*[kK]?\s*likes/i);
+        const likesMatch = rest.match(/(\d[\d,.]*\s*[kKmM]?)\s*likes/i);
         if (likesMatch) content.likes = this.parseNumber(likesMatch[1]);
 
-        const savesMatch = rest.match(/(\d[\d,.]*)\s*[kK]?\s*saves/i);
+        const savesMatch = rest.match(/(\d[\d,.]*\s*[kKmM]?)\s*saves/i);
         if (savesMatch) content.saves = this.parseNumber(savesMatch[1]);
 
-        const sharesMatch = rest.match(/(\d[\d,.]*)\s*[kK]?\s*shares/i);
+        const sharesMatch = rest.match(/(\d[\d,.]*\s*[kKmM]?)\s*shares/i);
         if (sharesMatch) content.shares = this.parseNumber(sharesMatch[1]);
 
         const commentsMatch = rest.match(
-          /(\d[\d,.]*)\s*[kK]?\s*comments/i
+          /(\d[\d,.]*\s*[kKmM]?)\s*comments/i
         );
         if (commentsMatch)
           content.comments = this.parseNumber(commentsMatch[1]);
@@ -391,7 +391,7 @@ export class DataStore {
         // The topic is everything that's not a number or metric keyword
         content.topic = rest
           .replace(
-            /\d[\d,.]*\s*[kK]?\s*(reach|views|likes|saves|shares|comments|engagement|followers|subs)/gi,
+            /\d[\d,.]*\s*[kKmM]?\s*(reach|views|likes|saves|shares|comments|engagement|followers|subs)/gi,
             ""
           )
           .replace(

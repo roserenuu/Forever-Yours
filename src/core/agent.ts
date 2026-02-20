@@ -233,6 +233,9 @@ ${this.dataStore.getDirectiveForAgent("eden")}`;
       console.log("[Eden] Detected image request — routing to Iris...");
       const result = await this.designer.design(userMessage);
       console.log("[Iris] Graphics ready — check the designs/ folder.");
+      // Record in conversation history so Eden has context for follow-ups
+      this.conversationHistory.push({ role: "user", content: userMessage });
+      this.conversationHistory.push({ role: "assistant", content: result.text });
       return { text: result.text, files: result.files };
     }
 

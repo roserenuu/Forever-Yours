@@ -17,35 +17,34 @@ export const hashtagSkill: Skill = {
 
 Content type: ${contentType}
 
-Provide THREE hashtag sets (use a different set each time you post to avoid shadowban):
+IMPORTANT: Instagram now limits posts to MAX 5 HASHTAGS (since December 2025 — confirmed by Adam Mosseri). Mosseri also confirmed hashtags do NOT boost reach anymore. They only help with categorization and search. KEYWORD-RICH CAPTIONS are now 30% more effective for reach than hashtags.
 
-## SET 1 (30 hashtags)
-Mix of:
-- 5 large hashtags (1M+ posts) for discovery
-- 10 medium hashtags (100K-1M posts) for competition sweet spot
-- 10 small/niche hashtags (10K-100K posts) for ranking
-- 5 micro hashtags (<10K posts) for domination
+Provide THREE hashtag sets of 5 hashtags each (rotate between sets to avoid spam flagging):
 
-## SET 2 (30 hashtags — different from Set 1)
-Same mix ratio, different hashtags
+## SET 1 (5 hashtags)
+- 1 branded tag: #JesusForeverYours
+- 2-3 niche-specific tags relevant to the content
+- 1 trending faith tag
 
-## SET 3 (30 hashtags — different from Sets 1 & 2)
-Same mix ratio, different hashtags
+## SET 2 (5 hashtags — different from Set 1)
+- 1 branded tag: #JesusForeverYours
+- 2-3 different niche tags
+- 1 different trending tag
 
-Always include these brand hashtags in every set:
-#JesusForeverYours #ForeverYours #RoseRenuu
+## SET 3 (5 hashtags — different from Sets 1 & 2)
+- 1 branded tag: #JesusForeverYours
+- 2-3 different niche tags
+- 1 crossover tag (reaches beyond the faith bubble)
 
 HASHTAG CATEGORIES TO DRAW FROM:
 - Faith/Christian: #ChristianContentCreator #FaithOverFear #JesusIsKing
 - Devotional: #LoveNotes #DailyDevotional #ScriptureOfTheDay
 - Audience: #ChristianWomen #FaithJourney #GodIsGood
 - Content-specific: based on the actual post content
-- Trending faith tags: what's currently getting engagement
-- Crossover tags: tags that reach beyond the faith bubble
 
 Also provide:
+- KEYWORD CAPTION STRATEGY: 5-7 searchable keyword phrases to weave into the caption (this is MORE important than hashtags now — Instagram's AI reads captions for discovery)
 - BEST TIME TO POST this type of content
-- Whether to put hashtags in caption or first comment
 - 3 related hashtags to AVOID (overused, shadowbanned, or off-brand)
 
 Write ONLY the hashtag strategy, nothing else.`

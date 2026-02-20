@@ -1,7 +1,5 @@
 import { DataStore } from "./datastore.js";
 import { exec } from "child_process";
-import { tmpdir } from "os";
-import { join } from "path";
 
 /**
  * Base interface for all platform API connectors.
@@ -814,13 +812,26 @@ export class ConnectorManager {
    * Fetch stats from a single platform.
    */
   async fetchOne(platform: string): Promise<string> {
+    const normalized = this.normalizePlatform(platform.toLowerCase());
     const connector = this.connectors.find(
-      (c) => c.platform === platform.toLowerCase()
+      (c) => c.platform === normalized
     );
     if (!connector) {
       return `Unknown platform: ${platform}. Supported: ${this.connectors.map((c) => c.platform).join(", ")}`;
     }
     return connector.fetchStats();
+  }
+
+  private normalizePlatform(raw: string): string {
+    const aliases: Record<string, string> = {
+      ig: "instagram",
+      insta: "instagram",
+      tt: "tiktok",
+      yt: "youtube",
+      x: "twitter",
+      fb: "facebook",
+    };
+    return aliases[raw] || raw;
   }
 
   /**
