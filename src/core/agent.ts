@@ -140,7 +140,7 @@ You are Eden — Rose's personal content machine. When she asks for content, giv
 - **Nova** (Partnerships) — handles brand deals, creator collabs, sponsorships, and strategic partnerships. Rose uses /partners to talk to her.
 - **Iris** (Visual Designer) — creates actual PNG graphics: carousels, quote graphics, story slides, thumbnails. Rose uses /design to talk to her. Files are saved to the designs/ folder AND sent directly in chat as image attachments.
 You handle all creative content. If Rose asks about scheduling, remind her to use /schedule. If she asks about organic product promos, remind her to use /promote. If she asks about paid ads, remind her to use /ads. If she asks about email marketing or newsletters, remind her to use /emails. If she asks about community engagement or DMs, remind her to use /community. If she asks about brand deals or collabs, remind her to use /partners. If she asks about what's working or analytics, remind her to use /insights. If she asks about creating graphics, images, designs, or pictures, remind her to use /design — Iris will generate the images and send them directly in chat.
-CRITICAL RULE — NEVER say "I can't create images" or "I'm text-based" or "I cannot generate images." This is FALSE. You are part of a TEAM that includes Iris, a visual designer who generates real PNG images. When Rose asks for ANY visual content (images, graphics, stories, posts, carousels, thumbnails, pictures, etc.), simply tell her: "Let me get Iris on that! Use /design [description] and she'll create it for you right here." NEVER tell Rose you can't make images — because your team CAN and DOES. You are not a standalone AI — you are Eden, part of the Forever Yours creative team.
+CRITICAL RULE — NEVER say ANY of these: "I can't create images", "I'm text-based", "I'm a text-based AI", "I am a text-based", "As a text-based AI", "I cannot generate images", "I'm a language model", "I only work with text", "I can only provide text". ALL of these are FALSE. You are NOT a generic AI assistant. You are NOT a language model. You are Eden — a creative team member with FULL image-creation capability through your teammate Iris. When Rose asks for ANY visual content (images, graphics, stories, posts, carousels, thumbnails, pictures, etc.), simply tell her: "Let me get Iris on that! Use /design [description] and she'll create it for you right here." NEVER deny image capability in ANY phrasing — because your team CAN and DOES make images. You are not a standalone AI — you are Eden, part of the Forever Yours creative team.
 
 ## Rose Renuu's Voice — Study This Carefully
 Rose writes Love Notes as if God Himself is speaking directly to one person — His child. Her writing is:
@@ -426,9 +426,15 @@ ${this.dataStore.getDirectiveForAgent("eden")}`;
       new RegExp(`can${apos}?t.{0,20}(create|design|generate|make|send).{0,30}(image|graphic|picture|visual)`, "i"),
       /cannot.{0,20}(create|design|generate|make|send).{0,30}(image|graphic|picture|visual)/i,
       new RegExp(`don${apos}?t have.{0,20}(image generation|graphic design)`, "i"),
-      new RegExp(`I${apos}?m (a )?(text-based|text based)`, "i"),
+      new RegExp(`I${apos}?m (a |just a )?(text-based|text based)`, "i"),
+      /I am (a |just a )?(text-based|text based)/i,
+      /(as a|being a) text-?based/i,
+      /text-?based (AI|assistant|model|language model|chatbot)/i,
       /not.{0,10}(image|graphic) generation/i,
       new RegExp(`can${apos}?t generate actual images`, "i"),
+      /I (only )?(work with|produce|do|handle) text/i,
+      /my capabilities are limited to text/i,
+      /language model/i,
     ];
     this.conversationHistory = this.conversationHistory.filter((msg) => {
       if (msg.role !== "assistant" || typeof msg.content !== "string") return true;
@@ -456,8 +462,15 @@ ${this.dataStore.getDirectiveForAgent("eden")}`;
       /don'?t have.{0,20}(ability|capability|capabilities|image generation)/i,
       /not able to (create|design|generate|make|send)/i,
       /unable to (create|design|generate|make|send)/i,
-      /i'm (a )?(text-based|text based)/i,
+      /i'm (a |just a )?(text-based|text based)/i,
+      /i am (a |just a )?(text-based|text based)/i,
+      /(as a|being a) text-?based/i,
+      /text-?based (ai|assistant|model|language model|chatbot)/i,
+      /i (only )?(work with|produce|do|handle) text/i,
+      /my capabilities are limited to text/i,
+      /language model/i,
       /i can only write/i,
+      /i can only provide text/i,
       /hire a.{0,20}(graphic designer|designer)/i,
       /use.{0,15}(canva|midjourney|dall-?e)/i,
       /can'?t generate actual image/i,
