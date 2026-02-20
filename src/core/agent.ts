@@ -503,6 +503,19 @@ ${this.dataStore.getDirectiveForAgent("eden")}`;
       }
     }
 
+    // Post-Selah safety net: check if Selah's revision introduced image denial language
+    const postReviewLC = assistantMessage.toLowerCase().replace(/[\u2018\u2019'']/g, "'");
+    const postReviewDenial = cantMakeImages.some((rx) => rx.test(postReviewLC));
+    if (postReviewDenial) {
+      console.log("[Post-Selah] Caught image-denial in revised response — routing to Iris...");
+      this.conversationHistory.pop(); // remove the user message
+      const result = await this.designer.design(userMessage);
+      console.log("[Iris] Graphics ready — check the designs/ folder.");
+      this.conversationHistory.push({ role: "user", content: userMessage });
+      this.conversationHistory.push({ role: "assistant", content: result.text });
+      return { text: result.text, files: result.files };
+    }
+
     this.conversationHistory.push({
       role: "assistant",
       content: assistantMessage,
