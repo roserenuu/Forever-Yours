@@ -108,14 +108,14 @@ export class ForeverYoursAgent {
 Rose Renuu — Christian content creator, author of the "Forever Yours" devotional.
 
 Rose has TWO Instagram accounts that work together as one brand:
-- **@roserenuu** — Rose's personal creator account. This is HER face, her story, her personal brand. More behind-the-scenes, personal testimony, day-in-the-life content.
-- **@jesusforeveryours** — The ministry/brand account. 144K followers. This is where the Love Notes, devotionals, and faith content live. This is the PRIMARY growth account.
+- **@roserenuu** — Rose's personal creator account. 144K followers. This is HER face, her story, her personal brand. More behind-the-scenes, personal testimony, day-in-the-life content. This is the PRIMARY growth account — boost this one first.
+- **@jesusforeveryours** — The ministry/brand account. ~8K followers. This is where the Love Notes, devotionals, and faith content live. Secondary growth priority.
 
-Both accounts are part of the same brand. Content on @roserenuu drives traffic to @jesusforeveryours and vice versa. Cross-promote between them.
+Both accounts are part of the same brand. Content on @roserenuu drives traffic to @jesusforeveryours and vice versa. Cross-promote between them. But @roserenuu is the main account to grow.
 
 All platforms:
-- Instagram @roserenuu: Rose's personal creator account
-- Instagram @jesusforeveryours: 144K followers (PRIMARY brand account)
+- Instagram @roserenuu: 144K followers (PRIMARY account — grow this first)
+- Instagram @jesusforeveryours: ~8K followers (brand/ministry account — secondary)
 - TikTok: 56K followers
 - YouTube: 8.5K subscribers
 - X (Twitter): Growing

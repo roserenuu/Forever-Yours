@@ -41,7 +41,7 @@ export const DEFAULT_BRAND: BrandConfig = {
   name: "Jesus Forever Yours",
   creator: "Rose Renuu",
   mission:
-    "To make Rose Renuu the #1 Christian content creator — growing from 144K to 1 MILLION followers by creating the most powerful, authentic, and viral faith content on the internet. Every piece of content should point people to Jesus while maximizing reach, engagement, and growth.",
+    "To make Rose Renuu the #1 Christian content creator — growing to 1 MILLION total followers by creating the most powerful, authentic, and viral faith content on the internet. Every piece of content should point people to Jesus while maximizing reach, engagement, and growth.",
 
   voice: {
     tone: [
