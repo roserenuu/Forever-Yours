@@ -7,7 +7,6 @@ process.on("warning", (w) => {
 import "dotenv/config";
 import { ForeverYoursAgent } from "./core/agent.js";
 import { allSkills } from "./skills/index.js";
-import { DiscordChannel } from "./channels/discord.js";
 import { TelegramChannel } from "./channels/telegram.js";
 import { WebChatChannel } from "./channels/webchat.js";
 import { Channel } from "./channels/types.js";
@@ -42,10 +41,16 @@ async function startGateway() {
   const webChat = new WebChatChannel(webChatPort);
   channels.push(webChat);
 
-  // Discord (if token provided)
+  // Discord (if token provided) — loaded dynamically to avoid Node v24 ESM crash
   if (process.env.DISCORD_BOT_TOKEN) {
-    const discord = new DiscordChannel(process.env.DISCORD_BOT_TOKEN);
-    channels.push(discord);
+    try {
+      const { DiscordChannel } = await import("./channels/discord.js");
+      const discord = new DiscordChannel(process.env.DISCORD_BOT_TOKEN);
+      channels.push(discord);
+    } catch (err) {
+      console.error("  [Discord] Failed to load discord.js:", (err as Error).message);
+      console.log("  [Discord] Skipped — discord.js is not compatible with your Node version. Telegram still works.");
+    }
   } else {
     console.log(
       "  [Discord] Skipped — set DISCORD_BOT_TOKEN in .env to enable"

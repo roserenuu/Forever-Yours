@@ -1,16 +1,17 @@
-import * as Discord from "discord.js";
+import { createRequire } from "node:module";
+const require = createRequire(import.meta.url);
+const Discord = require("discord.js");
+const { Client, GatewayIntentBits, AttachmentBuilder, Partials } = Discord;
+
 import * as fs from "fs";
 import * as path from "path";
 import { Channel, OutgoingMessage } from "./types.js";
 import { ForeverYoursAgent } from "../core/agent.js";
 
-const { Client, GatewayIntentBits, AttachmentBuilder, Partials } = Discord;
-type Message = Discord.Message;
-
 export class DiscordChannel implements Channel {
   name = "discord";
   platform = "discord";
-  private client: Discord.Client;
+  private client: any;
   private agent: ForeverYoursAgent | null = null;
   private token: string;
 
@@ -30,13 +31,13 @@ export class DiscordChannel implements Channel {
   async connect(agent: ForeverYoursAgent): Promise<void> {
     this.agent = agent;
 
-    this.client.once("ready", (c: Discord.Client<true>) => {
+    this.client.once("ready", (c: any) => {
       console.log(
         `[Discord] Connected as ${c.user.tag} — Eden, Selah, Mara, Zion & Navi are live`
       );
     });
 
-    this.client.on("messageCreate", async (message: Message) => {
+    this.client.on("messageCreate", async (message: any) => {
       if (message.author.bot) return;
 
       // Owner-only: only Rose can use this bot
@@ -72,7 +73,7 @@ export class DiscordChannel implements Channel {
         const response = await this.agent!.chat(content);
 
         // Build attachments from any generated image files
-        const attachments: Discord.AttachmentBuilder[] = [];
+        const attachments: any[] = [];
         if (response.files?.length) {
           for (const filePath of response.files) {
             try {
