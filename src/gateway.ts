@@ -53,9 +53,11 @@ async function startGateway() {
   }
 
   // Telegram (if token provided)
-  if (process.env.TELEGRAM_BOT_TOKEN) {
+  const tgToken = process.env.TELEGRAM_BOT_TOKEN;
+  console.log(`  [Telegram] Token in .env: ${tgToken ? tgToken.slice(0, 6) + "..." + tgToken.slice(-4) : "MISSING"}`);
+  if (tgToken) {
     const telegram = new TelegramChannel(
-      process.env.TELEGRAM_BOT_TOKEN,
+      tgToken,
       process.env.TELEGRAM_OWNER_CHAT_ID
     );
     channels.push(telegram);
