@@ -15,6 +15,7 @@ import { DataStore } from "./datastore.js";
 import { CsvImporter } from "./csv-import.js";
 import { ConnectorManager } from "./connectors.js";
 import { Dashboard } from "./dashboard.js";
+import { loadDevotional } from "./devotional-loader.js";
 
 export interface AgentMessage {
   role: "user" | "assistant";
@@ -53,6 +54,7 @@ export class ForeverYoursAgent {
   private csvImporter: CsvImporter;
   private connectors: ConnectorManager;
   private dashboard: Dashboard;
+  private devotionalContent: string = "";
 
   constructor(options: AgentOptions = {}) {
     this.client = new Anthropic();
@@ -75,6 +77,16 @@ export class ForeverYoursAgent {
     this.csvImporter = new CsvImporter(this.dataStore);
     this.connectors = new ConnectorManager(this.dataStore);
     this.dashboard = new Dashboard(this.dataStore);
+
+    // Load Rose's devotional content (async — runs in background)
+    loadDevotional().then((content) => {
+      if (content) {
+        this.devotionalContent = content;
+        console.log("  [Eden] Loaded Rose's devotional — Forever Yours: 24 Days with Jesus");
+      }
+    }).catch((err) => {
+      console.error("  [Devotional] Error loading:", err);
+    });
   }
 
   registerSkill(skill: Skill): void {
@@ -216,7 +228,12 @@ ${this.dataStore.getSummaryForAgents()}
 
 ${this.dataStore.getTranscriptBrief()}
 
-${this.dataStore.getDirectiveForAgent("eden")}`;
+${this.dataStore.getDirectiveForAgent("eden")}
+
+${this.devotionalContent ? `## Rose's Devotional — "Forever Yours: 24 Days with Jesus"
+This is Rose's published devotional. Use it as the foundation for ALL content — reference its themes, day entries, prayers, and scriptures when creating love notes, captions, reels, carousels, and campaigns. This devotional IS the brand.
+
+${this.devotionalContent}` : ""}`;
   }
 
   async chat(userMessage: string): Promise<ChatResponse> {

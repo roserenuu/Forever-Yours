@@ -113,11 +113,14 @@ export class TelegramChannel implements Channel {
           }
         }
 
+        // Clean markdown formatting for Telegram — no hashtags, dashes, or asterisks
+        const cleanText = this.cleanForTelegram(response.text);
+
         // Telegram has a 4096 char limit per message
-        if (response.text.length <= 4096) {
-          await ctx.reply(response.text);
+        if (cleanText.length <= 4096) {
+          await ctx.reply(cleanText);
         } else {
-          const chunks = this.splitMessage(response.text);
+          const chunks = this.splitMessage(cleanText);
           for (const chunk of chunks) {
             await ctx.reply(chunk);
           }
@@ -188,6 +191,24 @@ export class TelegramChannel implements Channel {
   private isOwner(ctx: Context): boolean {
     if (!this.ownerChatId) return true;
     return String(ctx.chat?.id) === this.ownerChatId;
+  }
+
+  /**
+   * Strip markdown formatting for clean Telegram messages.
+   * No hashtags, no asterisks, no dashes, no markdown headings.
+   */
+  private cleanForTelegram(text: string): string {
+    return text
+      .replace(/#{1,6}\s+/g, "")              // ## Headings → plain text
+      .replace(/\*\*([^*]+)\*\*/g, "$1")      // **bold** → plain
+      .replace(/\*([^*]+)\*/g, "$1")          // *italic* → plain
+      .replace(/^[-•]\s+/gm, "")             // - list items → plain (remove dash)
+      .replace(/`{3}[\s\S]*?`{3}/g, "")      // ```code blocks``` → remove
+      .replace(/`([^`]+)`/g, "$1")            // `inline code` → plain
+      .replace(/---+/g, "")                   // --- horizontal rules → remove
+      .replace(/#\w[\w/]*/g, "")              // #hashtags → remove
+      .replace(/\n{3,}/g, "\n\n")            // collapse excessive blank lines
+      .trim();
   }
 
   private splitMessage(text: string, maxLength = 4096): string[] {
