@@ -1,11 +1,10 @@
 import * as Discord from "discord.js";
-import { AttachmentBuilder, Partials } from "discord.js";
 import * as fs from "fs";
 import * as path from "path";
 import { Channel, OutgoingMessage } from "./types.js";
 import { ForeverYoursAgent } from "../core/agent.js";
 
-const { Client, GatewayIntentBits } = Discord;
+const { Client, GatewayIntentBits, AttachmentBuilder, Partials } = Discord;
 type Message = Discord.Message;
 
 export class DiscordChannel implements Channel {
@@ -73,7 +72,7 @@ export class DiscordChannel implements Channel {
         const response = await this.agent!.chat(content);
 
         // Build attachments from any generated image files
-        const attachments: AttachmentBuilder[] = [];
+        const attachments: Discord.AttachmentBuilder[] = [];
         if (response.files?.length) {
           for (const filePath of response.files) {
             try {
