@@ -45,7 +45,19 @@ async function onboard() {
     if (guildId) envLines.push(`DISCORD_GUILD_ID=${guildId}`);
   }
 
-  console.log("\n  Step 3: Ports");
+  console.log("\n  Step 3: Telegram Bot (optional)");
+  console.log("  Message @BotFather on Telegram to create a bot\n");
+  const telegramToken = await ask(
+    rl,
+    "  Telegram Bot Token (press Enter to skip): "
+  );
+  if (telegramToken) {
+    envLines.push(`TELEGRAM_BOT_TOKEN=${telegramToken}`);
+    const chatId = await ask(rl, "  Your Telegram Chat ID (optional, for owner-only access): ");
+    if (chatId) envLines.push(`TELEGRAM_OWNER_CHAT_ID=${chatId}`);
+  }
+
+  console.log("\n  Step 4: Ports");
   const webPort = await ask(rl, "  WebChat port (default 3000): ");
   envLines.push(`WEBCHAT_PORT=${webPort || "3000"}`);
 

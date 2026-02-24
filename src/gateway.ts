@@ -8,6 +8,7 @@ import "dotenv/config";
 import { ForeverYoursAgent } from "./core/agent.js";
 import { allSkills } from "./skills/index.js";
 import { DiscordChannel } from "./channels/discord.js";
+import { TelegramChannel } from "./channels/telegram.js";
 import { WebChatChannel } from "./channels/webchat.js";
 import { Channel } from "./channels/types.js";
 
@@ -48,6 +49,19 @@ async function startGateway() {
   } else {
     console.log(
       "  [Discord] Skipped — set DISCORD_BOT_TOKEN in .env to enable"
+    );
+  }
+
+  // Telegram (if token provided)
+  if (process.env.TELEGRAM_BOT_TOKEN) {
+    const telegram = new TelegramChannel(
+      process.env.TELEGRAM_BOT_TOKEN,
+      process.env.TELEGRAM_OWNER_CHAT_ID
+    );
+    channels.push(telegram);
+  } else {
+    console.log(
+      "  [Telegram] Skipped — set TELEGRAM_BOT_TOKEN in .env to enable"
     );
   }
 
