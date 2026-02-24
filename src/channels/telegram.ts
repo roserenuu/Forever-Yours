@@ -22,7 +22,11 @@ export class TelegramChannel implements Channel {
 
     // Handle /start command
     this.bot.start(async (ctx) => {
-      if (!this.isOwner(ctx)) return;
+      console.log(`  [Telegram] /start from chat ID: ${ctx.chat.id}`);
+      if (!this.isOwner(ctx)) {
+        console.log(`  [Telegram] Blocked — not the owner (expected ${this.ownerChatId})`);
+        return;
+      }
       await ctx.reply(
         "Hey love! Eden here — your Forever Yours AI brand agent. " +
           "Send me anything and I'll help you create, strategize, and grow. " +
@@ -32,7 +36,11 @@ export class TelegramChannel implements Channel {
 
     // Handle /help command
     this.bot.help(async (ctx) => {
-      if (!this.isOwner(ctx)) return;
+      console.log(`  [Telegram] /help from chat ID: ${ctx.chat.id}`);
+      if (!this.isOwner(ctx)) {
+        console.log(`  [Telegram] Blocked — not the owner (expected ${this.ownerChatId})`);
+        return;
+      }
       await ctx.reply(
         "Here's what I can do for you:\n\n" +
           "/lovenote — Write a love note from Jesus\n" +
@@ -49,14 +57,19 @@ export class TelegramChannel implements Channel {
 
     // Handle all text messages
     this.bot.on("text", async (ctx) => {
+      console.log(`  [Telegram] Message from chat ${ctx.chat.id}: "${ctx.message.text.slice(0, 80)}"`);
+
       // Log chat ID to help with owner setup
       if (!this.ownerChatId) {
         console.log(
-          `  [Telegram] Message from chat ID: ${ctx.chat.id} — add TELEGRAM_OWNER_CHAT_ID=${ctx.chat.id} to .env to restrict access`
+          `  [Telegram] No TELEGRAM_OWNER_CHAT_ID set — add TELEGRAM_OWNER_CHAT_ID=${ctx.chat.id} to .env to restrict access`
         );
       }
 
-      if (!this.isOwner(ctx)) return;
+      if (!this.isOwner(ctx)) {
+        console.log(`  [Telegram] Blocked — not the owner (expected ${this.ownerChatId}, got ${ctx.chat.id})`);
+        return;
+      }
 
       const content = ctx.message.text.trim();
       if (!content) return;
@@ -115,6 +128,15 @@ export class TelegramChannel implements Channel {
           "I'm having a moment \u2014 please try again. God's still on the throne though. \u{1F54A}\uFE0F"
         );
       }
+    });
+
+    // Clear any stale webhook before launching in polling mode
+    // (a leftover webhook will silently swallow all messages)
+    await this.bot.telegram.deleteWebhook({ drop_pending_updates: true });
+
+    // Catch unhandled errors so the bot doesn't crash silently
+    this.bot.catch((err: unknown) => {
+      console.error("[Telegram] Unhandled bot error:", err);
     });
 
     // Launch the bot
