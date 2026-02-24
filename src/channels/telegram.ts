@@ -49,6 +49,13 @@ export class TelegramChannel implements Channel {
 
     // Handle all text messages
     this.bot.on("text", async (ctx) => {
+      // Log chat ID to help with owner setup
+      if (!this.ownerChatId) {
+        console.log(
+          `  [Telegram] Message from chat ID: ${ctx.chat.id} — add TELEGRAM_OWNER_CHAT_ID=${ctx.chat.id} to .env to restrict access`
+        );
+      }
+
       if (!this.isOwner(ctx)) return;
 
       const content = ctx.message.text.trim();
