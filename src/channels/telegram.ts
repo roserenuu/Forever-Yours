@@ -75,17 +75,17 @@ export class TelegramChannel implements Channel {
       if (!content) return;
 
       try {
-        // Send typing indicator
-        await ctx.sendChatAction("typing");
+        // Send typing indicator (ignore rate-limit errors)
+        await ctx.sendChatAction("typing").catch(() => {});
 
-        // Keep typing indicator alive for long responses
+        // Keep typing indicator alive for long responses (every 5s to avoid rate limits)
         const typingInterval = setInterval(async () => {
           try {
             await ctx.sendChatAction("typing");
           } catch {
-            // ignore — chat action can fail silently
+            // ignore — typing indicator is cosmetic
           }
-        }, 4000);
+        }, 5000);
 
         const response = await this.agent!.chat(content);
 
@@ -100,9 +100,11 @@ export class TelegramChannel implements Channel {
                 continue;
               }
               const filename = path.basename(filePath);
-              await ctx.replyWithPhoto(
-                { source: fs.createReadStream(filePath), filename },
-                { caption: filename }
+              await this.rateLimitRetry(() =>
+                ctx.replyWithPhoto(
+                  { source: fs.createReadStream(filePath), filename },
+                  { caption: filename }
+                )
               );
             } catch (err) {
               console.error(
@@ -118,18 +120,24 @@ export class TelegramChannel implements Channel {
 
         // Telegram has a 4096 char limit per message
         if (cleanText.length <= 4096) {
-          await ctx.reply(cleanText);
+          await this.rateLimitRetry(() => ctx.reply(cleanText));
         } else {
           const chunks = this.splitMessage(cleanText);
           for (const chunk of chunks) {
-            await ctx.reply(chunk);
+            await this.rateLimitRetry(() => ctx.reply(chunk));
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("[Telegram] Error processing message:", error);
-        await ctx.reply(
-          "I'm having a moment \u2014 please try again. God's still on the throne though. \u{1F54A}\uFE0F"
-        );
+        try {
+          await this.rateLimitRetry(() =>
+            ctx.reply(
+              "I'm having a moment \u2014 please try again. God's still on the throne though. \u{1F54A}\uFE0F"
+            )
+          );
+        } catch {
+          // last resort — can't even send the error message
+        }
       }
     });
 
@@ -209,6 +217,27 @@ export class TelegramChannel implements Channel {
       .replace(/#\w[\w/]*/g, "")              // #hashtags → remove
       .replace(/\n{3,}/g, "\n\n")            // collapse excessive blank lines
       .trim();
+  }
+
+  /**
+   * Retry a Telegram API call if it hits a 429 rate limit.
+   * Waits the retry_after duration then tries again (up to 3 attempts).
+   */
+  private async rateLimitRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
+    for (let i = 0; i < attempts; i++) {
+      try {
+        return await fn();
+      } catch (err: any) {
+        const retryAfter = err?.response?.parameters?.retry_after;
+        if (retryAfter && i < attempts - 1) {
+          console.log(`  [Telegram] Rate limited — waiting ${retryAfter}s before retry`);
+          await new Promise((r) => setTimeout(r, retryAfter * 1000));
+        } else {
+          throw err;
+        }
+      }
+    }
+    throw new Error("rateLimitRetry: exhausted attempts");
   }
 
   private splitMessage(text: string, maxLength = 4096): string[] {
