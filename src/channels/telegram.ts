@@ -130,9 +130,31 @@ export class TelegramChannel implements Channel {
       }
     });
 
+    // Validate the token by calling getMe before anything else
+    try {
+      const me = await this.bot.telegram.getMe();
+      console.log(`  [Telegram] Token valid — bot is @${me.username}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("401") || msg.includes("Unauthorized")) {
+        throw new Error(
+          `[Telegram] Bot token is INVALID or REVOKED. ` +
+            `Go to @BotFather on Telegram > /mybots > pick your bot > API Token > Revoke and get a new one. ` +
+            `Then update TELEGRAM_BOT_TOKEN in .env.`
+        );
+      }
+      if (msg.includes("ENOTFOUND") || msg.includes("EAI_AGAIN") || msg.includes("ETIMEDOUT")) {
+        throw new Error(
+          `[Telegram] Can't reach api.telegram.org — check your internet connection.`
+        );
+      }
+      throw new Error(`[Telegram] Token check failed: ${msg}`);
+    }
+
     // Clear any stale webhook before launching in polling mode
     // (a leftover webhook will silently swallow all messages)
     await this.bot.telegram.deleteWebhook({ drop_pending_updates: true });
+    console.log(`  [Telegram] Webhook cleared — using polling mode`);
 
     // Catch unhandled errors so the bot doesn't crash silently
     this.bot.catch((err: unknown) => {
