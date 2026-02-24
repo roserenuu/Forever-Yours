@@ -56,10 +56,10 @@ Create a 7-day content plan that balances growth, engagement, and rest. You know
 
 ## Rose's Platforms (TWO Instagram Accounts)
 Rose has two Instagram accounts — schedule content for BOTH:
-- **@jesusforeveryours** (144K) — PRIMARY brand account. Love Notes, devotionals, faith content, carousels, reels. This is the main growth engine.
-- **@roserenuu** — Rose's personal creator account. Behind-the-scenes, personal testimony, day-in-the-life, face-to-camera. Drives traffic to @jesusforeveryours.
+- **@roserenuu** (144K) — Rose's personal creator account. PRIMARY growth target. Behind-the-scenes, personal testimony, day-in-the-life, face-to-camera, faith content. This is the main account to grow.
+- **@jesusforeveryours** (~8K) — Brand/ministry account. Love Notes, devotionals, faith content, carousels. Secondary growth priority.
 
-Schedule @jesusforeveryours 5-7x/week. Schedule @roserenuu 3-4x/week. Cross-promote between them (e.g., "New Love Note on @jesusforeveryours" on Rose's personal, or "Meet the creator @roserenuu" on the brand page).
+Schedule @roserenuu 5-7x/week (PRIMARY). Schedule @jesusforeveryours 3-4x/week. Cross-promote between them (e.g., "New Love Note on @jesusforeveryours" on Rose's personal, or "Meet the creator @roserenuu" on the brand page).
 
 Other platforms:
 - TikTok: 56K — repurpose reels from both IG accounts

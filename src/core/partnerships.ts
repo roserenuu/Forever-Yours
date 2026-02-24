@@ -38,8 +38,8 @@ Find, evaluate, pitch, negotiate, and manage partnerships that align with Rose's
 - Kaia (Community) manages engagement — she protects community trust during sponsored content
 
 ## Rose's Brand Stats (Your Pitch Ammo)
-- Instagram @jesusforeveryours: 144K followers (PRIMARY brand)
-- Instagram @roserenuu: Personal creator account
+- Instagram @roserenuu: 144K followers (PRIMARY — Rose's personal creator account)
+- Instagram @jesusforeveryours: ~8K followers (brand/ministry account)
 - TikTok: 56K followers
 - YouTube: 8.5K subscribers
 - Total reach: 200K+ across platforms

@@ -57,14 +57,14 @@ Analyze Rose's content performance across all her platforms and give SPECIFIC, D
 
 ## Rose's Platforms (TWO INSTAGRAM ACCOUNTS)
 Rose has two Instagram accounts — analyze them SEPARATELY and give directives for each:
-- **@jesusforeveryours** (144K followers) — The BRAND account. PRIMARY growth engine. Love Notes, devotionals, carousels, reels. This is where most followers come from.
+- **@roserenuu** (144K followers) — Rose's PERSONAL creator account. PRIMARY growth target. Behind-the-scenes, testimony, day-in-the-life, face-to-camera, faith content. This is the main account to grow.
   - Content types: Reels, Carousels, Stories, Posts, Lives
   - Key metrics: Reach, Saves, DM Shares (sends), Comments, Follower growth
   - Algorithm priority per Mosseri (Jan 2025): Watch Time > DM Sends per Reach > Likes per Reach. DM shares are 3-5x more valuable than likes for reaching new audiences.
-- **@roserenuu** — Rose's PERSONAL creator account. Behind-the-scenes, testimony, day-in-the-life, face-to-camera. Builds trust and drives traffic to @jesusforeveryours.
-  - Content types: Reels, Stories, Personal posts, Lives
-  - Key metrics: Profile visits, Link clicks to @jesusforeveryours, Story engagement
-  - Strategy: Authenticity > polish. Personal connection drives cross-follow
+- **@jesusforeveryours** (~8K followers) — The BRAND/ministry account. Love Notes, devotionals, carousels, reels. Secondary growth priority.
+  - Content types: Reels, Carousels, Stories, Posts
+  - Key metrics: Reach, Saves, Follower growth
+  - Strategy: Cross-promote from @roserenuu to drive followers here
 - **TikTok**: 56K followers
   - Content types: Short-form video, duets, stitches
   - Key metrics: Views, Watch time, Shares, Follower growth
@@ -194,7 +194,8 @@ Numbered list of the TOP 5 things Rose should do THIS WEEK based on the data.
 Rose is asking for a general content audit without providing specific data. Give her a strategic audit based on what you know about her brand and current social media best practices for faith creators in 2025-2026.
 
 ## Rose's Current Stats
-- Instagram: 144K followers (@roserenuu / @jesusforeveryours)
+- Instagram @roserenuu: 144K followers (PRIMARY)
+- Instagram @jesusforeveryours: ~8K followers (brand/ministry)
 - TikTok: 56K followers
 - YouTube: 8.5K subscribers
 - X, Threads, Facebook: Growing

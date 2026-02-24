@@ -13,7 +13,7 @@ export const hashtagSkill: Skill = {
   async execute(ctx: SkillContext): Promise<SkillResult> {
     const contentType = ctx.input || "a faith-based Instagram post";
     const response = await ctx.agent.generateContent(
-      `Generate optimized hashtag strategy for @jesusforeveryours (144K followers).
+      `Generate optimized hashtag strategy for Rose Renuu's accounts — @roserenuu (144K followers, PRIMARY) and @jesusforeveryours (~8K followers, brand).
 
 Content type: ${contentType}
 
@@ -128,7 +128,8 @@ export const collabSkill: Skill = {
 Request: ${request}
 
 ROSE'S STATS & BIO:
-- Instagram: 144K followers (@roserenuu / @jesusforeveryours)
+- Instagram @roserenuu: 144K followers (PRIMARY personal creator account)
+- Instagram @jesusforeveryours: ~8K followers (brand/ministry account)
 - TikTok: 56K followers
 - YouTube: 8.5K subscribers
 - Niche: Christian faith, devotionals, Love Notes

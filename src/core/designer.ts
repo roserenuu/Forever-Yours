@@ -4,21 +4,33 @@ import * as fs from "fs";
 import * as path from "path";
 import { BrandConfig } from "../config/brand.js";
 
-// Rose's brand color palette
+// Rose's brand color palette — matches brand-references/notes.md
 const BRAND_COLORS = {
-  cream: "#FFF8F0",
-  warmWhite: "#FFFDF9",
-  softPink: "#F5E6E0",
-  blushPink: "#E8C4C4",
-  dustyRose: "#C9A0A0",
-  deepBurgundy: "#6B2D3E",
-  warmBrown: "#8B6F5E",
-  softGold: "#D4A574",
-  gentleSage: "#B5C4B1",
+  // Backgrounds (from Rose's reference guide)
+  babyBlue: "#D6E4F0",
   charcoal: "#3A3A3A",
-  darkText: "#2C2C2C",
+  blushPink: "#E8CFC4",
+  palePink: "#F5E4E0",
+  warmBeige: "#E8E2D8",
+  warmTan: "#C8BFB2",
+  dustyMauve: "#9E8B8E",
+  roseBrown: "#8B5E5E",
+  pinkLinen: "#E8A0A0",
+  white: "#FFFFFF",
+  cream: "#F5F0EA",
+  // Text colors (from Rose's reference guide)
+  richBlack: "#1A1A1A",
+  softGray: "#B0A8A0",
+  deepRed: "#C0392B",
+  royalBlue: "#1A4DAF",
+  warmBrown: "#6B3A1F",
+  darkBrown: "#4A2C17",
+  orange: "#F28C28",
+  softPink: "#F0B8C8",
+  yellowGlow: "#FFD700",
+  // Functional
+  darkText: "#1A1A1A",
   lightText: "#FFFFFF",
-  scriptureGold: "#C4956A",
 };
 
 // Custom font directory — drop .ttf or .otf files here
@@ -94,6 +106,52 @@ export interface DesignResult {
 
 const OUTPUT_DIR = path.join(process.cwd(), "designs");
 
+// Brand references directory — style guide + reference images live here
+const BRAND_REF_DIR = path.join(process.cwd(), "brand-references");
+
+/**
+ * Load the brand style guide and any custom style notes Rose has added.
+ * Iris uses these to match Rose's actual visual preferences.
+ */
+function loadStyleGuide(): string {
+  let guide = "";
+
+  // Load main style guide (notes.md)
+  const notesPath = path.join(BRAND_REF_DIR, "notes.md");
+  if (fs.existsSync(notesPath)) {
+    guide += fs.readFileSync(notesPath, "utf-8");
+    console.log("  [Iris] Loaded brand style guide from brand-references/notes.md");
+  }
+
+  // Load Rose's custom style preferences (my-styles.md) — she can drop new styles here anytime
+  const myStylesPath = path.join(BRAND_REF_DIR, "my-styles.md");
+  if (fs.existsSync(myStylesPath)) {
+    const custom = fs.readFileSync(myStylesPath, "utf-8");
+    if (custom.trim()) {
+      guide += "\n\n---\n\n# Rose's Custom Style Preferences (HIGHEST PRIORITY — override everything above)\n\n" + custom;
+      console.log("  [Iris] Loaded Rose's custom styles from brand-references/my-styles.md");
+    }
+  }
+
+  // List reference images so Iris knows what examples exist
+  if (fs.existsSync(BRAND_REF_DIR)) {
+    const images = fs.readdirSync(BRAND_REF_DIR).filter(
+      (f) => /\.(jpg|jpeg|png|webp)$/i.test(f)
+    );
+    if (images.length > 0) {
+      guide += `\n\n---\n\n# Reference Images Available\nRose has ${images.length} reference design images in the brand-references/ folder:\n`;
+      for (const img of images) {
+        guide += `- ${img}\n`;
+      }
+      guide += "\nThese represent the EXACT style Rose wants. Match this aesthetic closely.\n";
+    }
+  }
+
+  return guide;
+}
+
+const styleGuide = loadStyleGuide();
+
 export class DesignerAgent {
   readonly name = "Iris";
   private client: Anthropic;
@@ -139,61 +197,25 @@ export class DesignerAgent {
 ## Your Job
 Generate STRUCTURED design plans that can be rendered into actual images. You don't just describe designs — you provide the EXACT text, colors, and layout for each slide/graphic so they can be built automatically.
 
+## Rose's Accounts
+- **@roserenuu** — 144K followers, Rose's personal creator account (PRIMARY — grow this first)
+- **@jesusforeveryours** — ~8K followers, brand/ministry page (secondary)
+
 ## The Team
 - Eden (Content Creator) writes the text — you make it BEAUTIFUL
 - Selah (QA Reviewer) checks everything
-- Mara (Scheduler) plans when to post — you make sure designs match the calendar
-- Zion (Marketing) handles organic promos — you make promo graphics that don't feel like ads
-- Adara (Ad Copy) writes ad copy — you design the ad creative
-- Lyra (Email) handles newsletters — you design email header graphics
-- Kaia (Community) manages engagement — you create engagement graphics (polls, Q&As)
-- Nova (Partnerships) handles brand deals — you design branded partnership content
+- Mara (Scheduler) plans when to post
 - Navi (Analytics) reads the data — FOLLOW HER DIRECTIVES on which visual styles perform best
 
-## Rose's Brand Visual Identity
-- **Primary Colors**: Cream (#FFF8F0), Soft Pink (#F5E6E0), Blush Pink (#E8C4C4), Dusty Rose (#C9A0A0)
-- **Accent Colors**: Deep Burgundy (#6B2D3E), Warm Brown (#8B6F5E), Soft Gold (#D4A574), Gentle Sage (#B5C4B1)
-- **Text Colors**: Charcoal (#3A3A3A) for body, Deep Burgundy for headings, Gold (#C4956A) for scripture refs
-- **Fonts**: Serif fonts (Georgia-style) for elegance. Clean, readable, not cluttered
-- **Style**: Minimalist, warm, intimate, elegant. Think hand-written letter aesthetic meets modern design
-- **Mood**: Soft, safe, sacred. Like a quiet morning with coffee and your Bible
-- **NEVER**: Neon colors, harsh contrasts, cluttered designs, salesy graphics, generic stock photo feel
-
-## Design Types
-
-### CAROUSEL (1080x1350px, multiple slides)
-- Slide 1: Title slide — big title, small subtitle, brand watermark
-- Middle slides: Content — one key point per slide, large readable text
-- Last slide: Scripture + CTA ("Save this", "Follow @jesusforeveryours")
-- Max 10 slides. Consistent colors across all slides.
-
-### QUOTE GRAPHIC (1080x1080px, single)
-- Centered text, elegant layout
-- Scripture reference at bottom
-- Brand watermark subtle in corner
-- Perfect for Love Notes
-
-### STORY (1080x1920px, vertical)
-- Full-screen vertical
-- Text centered with breathing room
-- Can have multiple story slides for series
-
-### THUMBNAIL (1280x720px, landscape)
-- YouTube thumbnail or blog header
-- Bold text, clear at small sizes
-- Rose's face placeholder area if needed
-
-### POST (1080x1080px, single)
-- General Instagram post
-- Can be quote, announcement, testimonial, etc.
-
-## CRITICAL: Response Format
+${styleGuide ? `## ROSE'S BRAND STYLE GUIDE (READ THIS CAREFULLY — THIS IS HER ACTUAL STYLE)\n\n${styleGuide}\n\n` : ""}## CRITICAL: Response Format
 You MUST respond with a JSON design plan. This is what gets rendered into actual images.
+
+Available themes: light, dark, blush, pink, blue, beige, mauve, rosebrown, cream
 
 \`\`\`json
 {
   "type": "carousel|quote|story|thumbnail|post",
-  "theme": "light|dark|pink|sage|burgundy",
+  "theme": "light|dark|blush|pink|blue|beige|mauve|rosebrown|cream",
   "slides": [
     {
       "layout": "title|body|scripture|cta|split",
@@ -210,15 +232,19 @@ You MUST respond with a JSON design plan. This is what gets rendered into actual
 \`\`\`
 
 ## Rules
-1. Keep text SHORT per slide — Instagram users scan, not read. Max 40 words per slide.
-2. One idea per slide. Don't cram.
-3. Title slides should be PUNCHY — 2-5 words that make someone stop scrolling
-4. Scripture should always include the full verse text AND reference
-5. Use Rose's voice — intimate, warm, like a handwritten letter
-6. Every carousel ends with a CTA slide
-7. Colors should be warm and soft — NEVER harsh or cold
-8. Leave breathing room — white space is your friend
-9. Brand watermark (@jesusforeveryours) on every graphic, small and subtle`,
+1. FOLLOW THE STYLE GUIDE ABOVE — it represents Rose's ACTUAL preferred aesthetic. Match it exactly.
+2. Keep text SHORT per slide — Instagram users scan, not read. Max 40 words per slide.
+3. One idea per slide. Don't cram.
+4. Title slides should be PUNCHY — 2-5 words that make someone stop scrolling
+5. Scripture should always include the full verse text AND reference
+6. Use Rose's voice — intimate, warm, like a handwritten letter
+7. Vary slide count: short (3-4), medium (5-6), long (7-8). Never repeat the same format back to back.
+8. Every slide must look DIFFERENT — vary layout, font weight, background shade, text size
+9. Colors should be warm and soft — NEVER harsh or cold
+10. Leave breathing room — whitespace is your friend
+11. NO watermarks — Rose uses these designs across multiple accounts
+12. Use lowercase for softness, UPPERCASE for power, as described in the style guide
+13. Design patterns to use: repetition style, centered minimal, mixed weight, pattern interrupts`,
       messages: [
         {
           role: "user",
@@ -297,8 +323,7 @@ You MUST respond with a JSON design plan. This is what gets rendered into actual
           this.drawBodySlide(ctx, dims, theme, slide);
       }
 
-      // Add watermark
-      this.drawWatermark(ctx, dims, theme);
+      // No watermark — Rose uses these designs across accounts
 
       // Save to file
       const filename = `${plan.type}_${timestamp}_slide${i + 1}.png`;
@@ -326,7 +351,7 @@ You MUST respond with a JSON design plan. This is what gets rendered into actual
   private getDimensions(type: string): { width: number; height: number } {
     switch (type) {
       case "carousel":
-        return { width: 1080, height: 1350 };
+        return { width: 1080, height: 1440 };
       case "story":
         return { width: 1080, height: 1920 };
       case "thumbnail":
@@ -348,6 +373,7 @@ You MUST respond with a JSON design plan. This is what gets rendered into actual
     watermark: string;
     decorLine: string;
   } {
+    // Themes based on Rose's brand-references/notes.md color palette
     switch (name) {
       case "dark":
         return {
@@ -355,55 +381,89 @@ You MUST respond with a JSON design plan. This is what gets rendered into actual
           bgSecondary: "#4A4A4A",
           title: BRAND_COLORS.lightText,
           body: "#E8E0D8",
-          accent: BRAND_COLORS.softGold,
-          scripture: BRAND_COLORS.scriptureGold,
+          accent: BRAND_COLORS.yellowGlow,
+          scripture: BRAND_COLORS.softPink,
           watermark: "rgba(255,255,255,0.15)",
-          decorLine: BRAND_COLORS.softGold,
+          decorLine: BRAND_COLORS.softPink,
+        };
+      case "blush":
+        return {
+          bg: BRAND_COLORS.blushPink,
+          bgSecondary: BRAND_COLORS.palePink,
+          title: BRAND_COLORS.darkBrown,
+          body: BRAND_COLORS.richBlack,
+          accent: BRAND_COLORS.roseBrown,
+          scripture: BRAND_COLORS.warmBrown,
+          watermark: "rgba(75,44,23,0.12)",
+          decorLine: BRAND_COLORS.roseBrown,
         };
       case "pink":
         return {
-          bg: BRAND_COLORS.softPink,
+          bg: BRAND_COLORS.palePink,
           bgSecondary: BRAND_COLORS.blushPink,
-          title: BRAND_COLORS.deepBurgundy,
-          body: BRAND_COLORS.darkText,
-          accent: BRAND_COLORS.dustyRose,
-          scripture: BRAND_COLORS.scriptureGold,
-          watermark: "rgba(107,45,62,0.12)",
-          decorLine: BRAND_COLORS.dustyRose,
+          title: BRAND_COLORS.darkBrown,
+          body: BRAND_COLORS.richBlack,
+          accent: BRAND_COLORS.roseBrown,
+          scripture: BRAND_COLORS.warmBrown,
+          watermark: "rgba(75,44,23,0.12)",
+          decorLine: BRAND_COLORS.pinkLinen,
         };
-      case "sage":
+      case "blue":
         return {
-          bg: "#F0F4EE",
-          bgSecondary: BRAND_COLORS.gentleSage,
-          title: "#3A4A3A",
-          body: BRAND_COLORS.darkText,
-          accent: BRAND_COLORS.gentleSage,
-          scripture: "#6B7B6B",
-          watermark: "rgba(58,74,58,0.12)",
-          decorLine: BRAND_COLORS.gentleSage,
+          bg: BRAND_COLORS.babyBlue,
+          bgSecondary: "#C4D6E8",
+          title: BRAND_COLORS.royalBlue,
+          body: BRAND_COLORS.richBlack,
+          accent: BRAND_COLORS.royalBlue,
+          scripture: BRAND_COLORS.royalBlue,
+          watermark: "rgba(26,77,175,0.12)",
+          decorLine: BRAND_COLORS.royalBlue,
         };
-      case "burgundy":
+      case "beige":
         return {
-          bg: BRAND_COLORS.deepBurgundy,
-          bgSecondary: "#8B3D52",
+          bg: BRAND_COLORS.warmBeige,
+          bgSecondary: BRAND_COLORS.warmTan,
+          title: BRAND_COLORS.darkBrown,
+          body: BRAND_COLORS.richBlack,
+          accent: BRAND_COLORS.warmBrown,
+          scripture: BRAND_COLORS.warmBrown,
+          watermark: "rgba(75,44,23,0.10)",
+          decorLine: BRAND_COLORS.warmBrown,
+        };
+      case "mauve":
+        return {
+          bg: BRAND_COLORS.dustyMauve,
+          bgSecondary: BRAND_COLORS.roseBrown,
           title: BRAND_COLORS.lightText,
-          body: "#F5E6E0",
-          accent: BRAND_COLORS.softGold,
-          scripture: BRAND_COLORS.softGold,
+          body: "#F5E4E0",
+          accent: BRAND_COLORS.pinkLinen,
+          scripture: BRAND_COLORS.softPink,
           watermark: "rgba(255,255,255,0.12)",
-          decorLine: BRAND_COLORS.softGold,
+          decorLine: BRAND_COLORS.pinkLinen,
         };
+      case "rosebrown":
+        return {
+          bg: BRAND_COLORS.roseBrown,
+          bgSecondary: BRAND_COLORS.dustyMauve,
+          title: BRAND_COLORS.lightText,
+          body: "#F5E4E0",
+          accent: BRAND_COLORS.yellowGlow,
+          scripture: BRAND_COLORS.softPink,
+          watermark: "rgba(255,255,255,0.12)",
+          decorLine: BRAND_COLORS.softPink,
+        };
+      case "cream":
       case "light":
       default:
         return {
           bg: BRAND_COLORS.cream,
-          bgSecondary: BRAND_COLORS.softPink,
-          title: BRAND_COLORS.deepBurgundy,
-          body: BRAND_COLORS.darkText,
-          accent: BRAND_COLORS.dustyRose,
-          scripture: BRAND_COLORS.scriptureGold,
-          watermark: "rgba(107,45,62,0.10)",
-          decorLine: BRAND_COLORS.dustyRose,
+          bgSecondary: BRAND_COLORS.palePink,
+          title: BRAND_COLORS.darkBrown,
+          body: BRAND_COLORS.richBlack,
+          accent: BRAND_COLORS.warmBrown,
+          scripture: BRAND_COLORS.warmBrown,
+          watermark: "rgba(75,44,23,0.10)",
+          decorLine: BRAND_COLORS.warmBrown,
         };
     }
   }
@@ -674,7 +734,7 @@ You MUST respond with a JSON design plan. This is what gets rendered into actual
     ctx.fillStyle = theme.watermark;
     ctx.font = `${Math.floor(dims.width * 0.022)}px ${FONTS.accent}`;
     ctx.textAlign = "center";
-    ctx.fillText("@jesusforeveryours", dims.width / 2, dims.height * 0.96);
+    ctx.fillText("@roserenuu", dims.width / 2, dims.height * 0.96);
   }
 
   /**

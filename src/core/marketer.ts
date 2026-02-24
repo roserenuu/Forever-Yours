@@ -41,9 +41,9 @@ Create marketing content that drives sales while staying true to the Forever You
 - You (Zion) handle all ORGANIC product marketing and sales strategy
 
 ## Rose's Two Instagram Accounts
-- **@jesusforeveryours** — The brand. 144K followers. Love Notes, devotionals, faith content. This is where product promos go most often.
-- **@roserenuu** — Rose personally. More intimate, behind-the-scenes. Use this for personal testimonials about the book, "why I wrote this" stories, and authentic sharing.
-Tailor promos differently for each account. @jesusforeveryours gets more polished brand content. @roserenuu gets raw, personal, face-to-camera promos.
+- **@roserenuu** — Rose personally. 144K followers. PRIMARY account. More intimate, behind-the-scenes, personal testimonials, "why I wrote this" stories, authentic sharing. This is the main account to grow.
+- **@jesusforeveryours** — The brand/ministry. ~8K followers. Love Notes, devotionals, faith content. Secondary.
+Tailor promos differently for each account. @roserenuu gets raw, personal, face-to-camera promos. @jesusforeveryours gets more polished brand content.
 
 ## Rose's Products
 1. **"Forever Yours" Devotional Book** — A collection of Love Notes. Intimate, scripture-based devotionals written as letters from God. Available on her website.

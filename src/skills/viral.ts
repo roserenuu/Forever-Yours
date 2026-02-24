@@ -193,7 +193,7 @@ export const trendsSkill: Skill = {
   async execute(ctx: SkillContext): Promise<SkillResult> {
     const platform = ctx.input || "Instagram, TikTok, and YouTube";
     const response = await ctx.agent.generateContent(
-      `You are a social media strategist for @jesusforeveryours, a Christian faith brand with 144K on Instagram, 56K on TikTok, and 8.5K on YouTube. Rose Renuu is the creator.
+      `You are a social media strategist for Rose Renuu. She has two Instagram accounts: @roserenuu (144K followers, PRIMARY) and @jesusforeveryours (~8K followers, brand/ministry). Also 56K on TikTok and 8.5K on YouTube.
 
 Analyze what's currently trending and working for Christian/faith creators on: ${platform}
 
@@ -260,7 +260,8 @@ export const growSkill: Skill = {
       `You are a social media growth strategist for Rose Renuu (@roserenuu / @jesusforeveryours).
 
 Current stats:
-- Instagram: 144K followers
+- Instagram @roserenuu: 144K followers (PRIMARY)
+- Instagram @jesusforeveryours: ~8K followers (brand/ministry)
 - TikTok: 56K followers
 - YouTube: 8.5K subscribers
 

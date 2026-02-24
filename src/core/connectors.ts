@@ -15,7 +15,7 @@ export interface PlatformConnector {
  * Instagram Graph API connector — supports multiple accounts.
  * Rose has two Instagram accounts that work together:
  *   - @roserenuu (personal creator brand — Rose herself)
- *   - @jesusforeveryours (ministry/content brand — 144K)
+ *   - @jesusforeveryours (ministry/content brand — ~8K)
  *
  * Each account gets its own token and is tracked separately.
  */
