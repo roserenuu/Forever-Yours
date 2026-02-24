@@ -10,6 +10,7 @@ export class TelegramChannel implements Channel {
   private bot: Telegraf;
   private agent: ForeverYoursAgent | null = null;
   private ownerChatId: string | null;
+  private running = false;
 
   constructor(token: string, ownerChatId?: string) {
     this.bot = new Telegraf(token);
@@ -111,13 +112,17 @@ export class TelegramChannel implements Channel {
 
     // Launch the bot
     await this.bot.launch();
+    this.running = true;
     console.log(
       `  [Telegram] Connected \u2014 Eden, Selah, Mara, Zion & Navi are live`
     );
   }
 
   async disconnect(): Promise<void> {
-    this.bot.stop("Gateway shutdown");
+    if (this.running) {
+      this.bot.stop("Gateway shutdown");
+      this.running = false;
+    }
     console.log("  [Telegram] Disconnected");
   }
 
