@@ -244,7 +244,9 @@ Available themes: light, dark, blush, pink, blue, beige, mauve, rosebrown, cream
 10. Leave breathing room — whitespace is your friend
 11. NO watermarks — Rose uses these designs across multiple accounts
 12. Use lowercase for softness, UPPERCASE for power, as described in the style guide
-13. Design patterns to use: repetition style, centered minimal, mixed weight, pattern interrupts`,
+13. Design patterns to use: repetition style, centered minimal, mixed weight, pattern interrupts
+14. JUST TEXT — no decorative lines, no shapes, no pill buttons, no dots, no dividers. Clean text on a clean background. That's Rose's style.
+15. ALL text must be centered in the middle of the slide — vertically AND horizontally. Generous whitespace around everything.`,
       messages: [
         {
           role: "user",
@@ -486,45 +488,7 @@ Available themes: light, dark, blush, pink, blue, beige, mauve, rosebrown, cream
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
 
-    // Decorative elements
-    if (layout === "title" || layout === "cta") {
-      // Top and bottom decorative lines
-      ctx.strokeStyle = theme.decorLine;
-      ctx.lineWidth = 2;
-      ctx.globalAlpha = 0.3;
-
-      // Top line
-      const margin = w * 0.15;
-      ctx.beginPath();
-      ctx.moveTo(margin, h * 0.12);
-      ctx.lineTo(w - margin, h * 0.12);
-      ctx.stroke();
-
-      // Bottom line
-      ctx.beginPath();
-      ctx.moveTo(margin, h * 0.88);
-      ctx.lineTo(w - margin, h * 0.88);
-      ctx.stroke();
-
-      ctx.globalAlpha = 1;
-    }
-
-    // Small decorative dot/diamond in corners for elegance
-    ctx.fillStyle = theme.decorLine;
-    ctx.globalAlpha = 0.15;
-    const dotSize = 6;
-
-    // Top-left corner cluster
-    ctx.beginPath();
-    ctx.arc(w * 0.08, h * 0.06, dotSize, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Bottom-right corner cluster
-    ctx.beginPath();
-    ctx.arc(w * 0.92, h * 0.94, dotSize, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.globalAlpha = 1;
+    // Clean background — no decorative elements, just text
   }
 
   private drawTitleSlide(
@@ -536,40 +500,63 @@ Available themes: light, dark, blush, pink, blue, beige, mauve, rosebrown, cream
     const w = dims.width;
     const h = dims.height;
     const padding = w * 0.12;
+    const maxWidth = w - padding * 2;
+    const gap = h * 0.04;
 
-    // Accent label (small text above title)
+    const accentFontSize = Math.floor(w * 0.032);
+    const titleFontSize = Math.floor(w * 0.075);
+    const titleLineH = Math.floor(w * 0.09);
+    const bodyFontSize = Math.floor(w * 0.035);
+    const bodyLineH = Math.floor(w * 0.05);
+
+    // Measure total content height for vertical centering
+    let totalHeight = 0;
+    let accentH = 0, titleH = 0, bodyH = 0;
+
+    if (slide.accent) {
+      accentH = accentFontSize;
+      totalHeight += accentH;
+    }
+    if (slide.title) {
+      ctx.font = `bold ${titleFontSize}px ${FONTS.heading}`;
+      const lines = this.measureWrappedText(ctx, slide.title, maxWidth);
+      titleH = lines * titleLineH;
+      if (totalHeight > 0) totalHeight += gap;
+      totalHeight += titleH;
+    }
+    if (slide.body) {
+      ctx.font = `${bodyFontSize}px ${FONTS.body}`;
+      const lines = this.measureWrappedText(ctx, slide.body, maxWidth);
+      bodyH = lines * bodyLineH;
+      if (totalHeight > 0) totalHeight += gap;
+      totalHeight += bodyH;
+    }
+
+    // Center vertically
+    let y = (h - totalHeight) / 2;
+
     if (slide.accent) {
       ctx.fillStyle = theme.accent;
-      ctx.font = `italic ${Math.floor(w * 0.032)}px ${FONTS.accent}`;
+      ctx.font = `italic ${accentFontSize}px ${FONTS.accent}`;
       ctx.textAlign = "center";
-      ctx.fillText(slide.accent.toUpperCase(), w / 2, h * 0.35);
+      ctx.fillText(slide.accent.toUpperCase(), w / 2, y + accentFontSize * 0.8);
+      y += accentH + gap;
     }
 
-    // Title (big, bold)
     if (slide.title) {
       ctx.fillStyle = theme.title;
-      ctx.font = `bold ${Math.floor(w * 0.075)}px ${FONTS.heading}`;
+      ctx.font = `bold ${titleFontSize}px ${FONTS.heading}`;
       ctx.textAlign = "center";
-      this.wrapText(ctx, slide.title, w / 2, h * 0.45, w - padding * 2, Math.floor(w * 0.09));
+      this.wrapText(ctx, slide.title, w / 2, y + titleLineH * 0.8, maxWidth, titleLineH);
+      y += titleH + gap;
     }
 
-    // Subtitle / body (smaller text below)
     if (slide.body) {
       ctx.fillStyle = theme.body;
-      ctx.font = `${Math.floor(w * 0.035)}px ${FONTS.body}`;
+      ctx.font = `${bodyFontSize}px ${FONTS.body}`;
       ctx.textAlign = "center";
-      this.wrapText(ctx, slide.body, w / 2, h * 0.62, w - padding * 2, Math.floor(w * 0.05));
+      this.wrapText(ctx, slide.body, w / 2, y + bodyLineH * 0.8, maxWidth, bodyLineH);
     }
-
-    // Decorative divider between title and body
-    ctx.strokeStyle = theme.decorLine;
-    ctx.lineWidth = 1.5;
-    ctx.globalAlpha = 0.4;
-    ctx.beginPath();
-    ctx.moveTo(w * 0.35, h * 0.55);
-    ctx.lineTo(w * 0.65, h * 0.55);
-    ctx.stroke();
-    ctx.globalAlpha = 1;
   }
 
   private drawBodySlide(
@@ -581,39 +568,79 @@ Available themes: light, dark, blush, pink, blue, beige, mauve, rosebrown, cream
     const w = dims.width;
     const h = dims.height;
     const padding = w * 0.12;
+    const maxWidth = w - padding * 2;
+    const gap = h * 0.04;
 
-    let yPos = h * 0.18;
+    const titleFontSize = Math.floor(w * 0.05);
+    const titleLineH = Math.floor(w * 0.065);
+    const bodyFontSize = Math.floor(w * 0.04);
+    const bodyLineH = Math.floor(w * 0.058);
+    const scriptureFontSize = Math.floor(w * 0.033);
+    const scriptureLineH = Math.floor(w * 0.048);
+    const refFontSize = Math.floor(w * 0.028);
 
-    // Small title/heading if present
+    // Measure total content height for vertical centering
+    let totalHeight = 0;
+    let titleH = 0, bodyH = 0, scriptureH = 0, refH = 0;
+
     if (slide.title) {
-      ctx.fillStyle = theme.title;
-      ctx.font = `bold ${Math.floor(w * 0.05)}px ${FONTS.heading}`;
-      ctx.textAlign = "center";
-      this.wrapText(ctx, slide.title, w / 2, yPos, w - padding * 2, Math.floor(w * 0.065));
-      yPos += Math.floor(w * 0.08);
+      ctx.font = `bold ${titleFontSize}px ${FONTS.heading}`;
+      const lines = this.measureWrappedText(ctx, slide.title, maxWidth);
+      titleH = lines * titleLineH;
+      totalHeight += titleH;
     }
-
-    // Main body text
     if (slide.body) {
-      ctx.fillStyle = theme.body;
-      ctx.font = `${Math.floor(w * 0.04)}px ${FONTS.body}`;
-      ctx.textAlign = "center";
-      const lines = this.wrapText(ctx, slide.body, w / 2, yPos, w - padding * 2, Math.floor(w * 0.058));
-      yPos += lines * Math.floor(w * 0.058) + Math.floor(w * 0.04);
+      ctx.font = `${bodyFontSize}px ${FONTS.body}`;
+      const lines = this.measureWrappedText(ctx, slide.body, maxWidth);
+      bodyH = lines * bodyLineH;
+      if (totalHeight > 0) totalHeight += gap;
+      totalHeight += bodyH;
     }
-
-    // Scripture at bottom
     if (slide.scripture) {
-      ctx.fillStyle = theme.body;
-      ctx.font = `italic ${Math.floor(w * 0.033)}px ${FONTS.scripture}`;
-      ctx.textAlign = "center";
-      this.wrapText(ctx, `"${slide.scripture}"`, w / 2, h * 0.75, w - padding * 2, Math.floor(w * 0.048));
+      ctx.font = `italic ${scriptureFontSize}px ${FONTS.scripture}`;
+      const lines = this.measureWrappedText(ctx, `"${slide.scripture}"`, maxWidth);
+      scriptureH = lines * scriptureLineH;
+      if (totalHeight > 0) totalHeight += gap;
+      totalHeight += scriptureH;
     }
     if (slide.scriptureRef) {
-      ctx.fillStyle = theme.scripture;
-      ctx.font = `${Math.floor(w * 0.028)}px ${FONTS.scripture}`;
+      refH = refFontSize;
+      if (totalHeight > 0) totalHeight += gap * 0.5;
+      totalHeight += refH;
+    }
+
+    // Center vertically
+    let y = (h - totalHeight) / 2;
+
+    if (slide.title) {
+      ctx.fillStyle = theme.title;
+      ctx.font = `bold ${titleFontSize}px ${FONTS.heading}`;
       ctx.textAlign = "center";
-      ctx.fillText(`— ${slide.scriptureRef}`, w / 2, h * 0.87);
+      this.wrapText(ctx, slide.title, w / 2, y + titleLineH * 0.8, maxWidth, titleLineH);
+      y += titleH + gap;
+    }
+
+    if (slide.body) {
+      ctx.fillStyle = theme.body;
+      ctx.font = `${bodyFontSize}px ${FONTS.body}`;
+      ctx.textAlign = "center";
+      this.wrapText(ctx, slide.body, w / 2, y + bodyLineH * 0.8, maxWidth, bodyLineH);
+      y += bodyH + gap;
+    }
+
+    if (slide.scripture) {
+      ctx.fillStyle = theme.body;
+      ctx.font = `italic ${scriptureFontSize}px ${FONTS.scripture}`;
+      ctx.textAlign = "center";
+      this.wrapText(ctx, `"${slide.scripture}"`, w / 2, y + scriptureLineH * 0.8, maxWidth, scriptureLineH);
+      y += scriptureH + gap * 0.5;
+    }
+
+    if (slide.scriptureRef) {
+      ctx.fillStyle = theme.scripture;
+      ctx.font = `${refFontSize}px ${FONTS.scripture}`;
+      ctx.textAlign = "center";
+      ctx.fillText(`— ${slide.scriptureRef}`, w / 2, y + refFontSize * 0.8);
     }
   }
 
@@ -626,39 +653,48 @@ Available themes: light, dark, blush, pink, blue, beige, mauve, rosebrown, cream
     const w = dims.width;
     const h = dims.height;
     const padding = w * 0.14;
+    const maxWidth = w - padding * 2;
+    const gap = h * 0.04;
 
-    // Large opening quote mark
-    ctx.fillStyle = theme.decorLine;
-    ctx.globalAlpha = 0.2;
-    ctx.font = `${Math.floor(w * 0.2)}px ${FONTS.heading}`;
-    ctx.textAlign = "center";
-    ctx.fillText("\u201C", w / 2, h * 0.25);
-    ctx.globalAlpha = 1;
+    const scriptureFontSize = Math.floor(w * 0.042);
+    const scriptureLineH = Math.floor(w * 0.06);
+    const refFontSize = Math.floor(w * 0.03);
 
-    // Scripture text (centered, elegant)
     const scriptureText = slide.scripture || slide.body || "";
-    ctx.fillStyle = theme.body;
-    ctx.font = `italic ${Math.floor(w * 0.042)}px ${FONTS.scripture}`;
-    ctx.textAlign = "center";
-    this.wrapText(ctx, scriptureText, w / 2, h * 0.38, w - padding * 2, Math.floor(w * 0.06));
 
-    // Reference
+    // Measure total content height for vertical centering
+    let totalHeight = 0;
+    let scriptureH = 0, refH = 0;
+
+    if (scriptureText) {
+      ctx.font = `italic ${scriptureFontSize}px ${FONTS.scripture}`;
+      const lines = this.measureWrappedText(ctx, scriptureText, maxWidth);
+      scriptureH = lines * scriptureLineH;
+      totalHeight += scriptureH;
+    }
     if (slide.scriptureRef) {
-      ctx.fillStyle = theme.scripture;
-      ctx.font = `bold ${Math.floor(w * 0.03)}px ${FONTS.scripture}`;
-      ctx.textAlign = "center";
-      ctx.fillText(slide.scriptureRef, w / 2, h * 0.78);
+      refH = refFontSize;
+      if (totalHeight > 0) totalHeight += gap;
+      totalHeight += refH;
     }
 
-    // Decorative line under scripture
-    ctx.strokeStyle = theme.decorLine;
-    ctx.lineWidth = 1;
-    ctx.globalAlpha = 0.3;
-    ctx.beginPath();
-    ctx.moveTo(w * 0.3, h * 0.72);
-    ctx.lineTo(w * 0.7, h * 0.72);
-    ctx.stroke();
-    ctx.globalAlpha = 1;
+    // Center vertically
+    let y = (h - totalHeight) / 2;
+
+    if (scriptureText) {
+      ctx.fillStyle = theme.body;
+      ctx.font = `italic ${scriptureFontSize}px ${FONTS.scripture}`;
+      ctx.textAlign = "center";
+      this.wrapText(ctx, scriptureText, w / 2, y + scriptureLineH * 0.8, maxWidth, scriptureLineH);
+      y += scriptureH + gap;
+    }
+
+    if (slide.scriptureRef) {
+      ctx.fillStyle = theme.scripture;
+      ctx.font = `bold ${refFontSize}px ${FONTS.scripture}`;
+      ctx.textAlign = "center";
+      ctx.fillText(slide.scriptureRef, w / 2, y + refFontSize * 0.8);
+    }
   }
 
   private drawCtaSlide(
@@ -670,59 +706,64 @@ Available themes: light, dark, blush, pink, blue, beige, mauve, rosebrown, cream
     const w = dims.width;
     const h = dims.height;
     const padding = w * 0.12;
+    const maxWidth = w - padding * 2;
+    const gap = h * 0.04;
 
-    // CTA heading
-    if (slide.title || slide.cta) {
-      ctx.fillStyle = theme.title;
-      ctx.font = `bold ${Math.floor(w * 0.055)}px ${FONTS.heading}`;
-      ctx.textAlign = "center";
-      this.wrapText(ctx, slide.title || slide.cta || "", w / 2, h * 0.38, w - padding * 2, Math.floor(w * 0.07));
+    const headingFontSize = Math.floor(w * 0.055);
+    const headingLineH = Math.floor(w * 0.07);
+    const bodyFontSize = Math.floor(w * 0.035);
+    const bodyLineH = Math.floor(w * 0.05);
+    const ctaFontSize = Math.floor(w * 0.032);
+
+    // Measure total content height for vertical centering
+    let totalHeight = 0;
+    let headingH = 0, bodyH = 0, ctaH = 0;
+
+    const headingText = slide.title || slide.cta || "";
+    if (headingText) {
+      ctx.font = `bold ${headingFontSize}px ${FONTS.heading}`;
+      const lines = this.measureWrappedText(ctx, headingText, maxWidth);
+      headingH = lines * headingLineH;
+      totalHeight += headingH;
+    }
+    if (slide.body) {
+      ctx.font = `${bodyFontSize}px ${FONTS.body}`;
+      const lines = this.measureWrappedText(ctx, slide.body, maxWidth);
+      bodyH = lines * bodyLineH;
+      if (totalHeight > 0) totalHeight += gap;
+      totalHeight += bodyH;
+    }
+    if (slide.cta) {
+      ctaH = ctaFontSize;
+      if (totalHeight > 0) totalHeight += gap;
+      totalHeight += ctaH;
     }
 
-    // Body text
+    // Center vertically
+    let y = (h - totalHeight) / 2;
+
+    if (headingText) {
+      ctx.fillStyle = theme.title;
+      ctx.font = `bold ${headingFontSize}px ${FONTS.heading}`;
+      ctx.textAlign = "center";
+      this.wrapText(ctx, headingText, w / 2, y + headingLineH * 0.8, maxWidth, headingLineH);
+      y += headingH + gap;
+    }
+
     if (slide.body) {
       ctx.fillStyle = theme.body;
-      ctx.font = `${Math.floor(w * 0.035)}px ${FONTS.body}`;
+      ctx.font = `${bodyFontSize}px ${FONTS.body}`;
       ctx.textAlign = "center";
-      this.wrapText(ctx, slide.body, w / 2, h * 0.52, w - padding * 2, Math.floor(w * 0.05));
+      this.wrapText(ctx, slide.body, w / 2, y + bodyLineH * 0.8, maxWidth, bodyLineH);
+      y += bodyH + gap;
     }
 
-    // CTA button-style element
+    // CTA as plain text — no button/pill shape
     if (slide.cta) {
-      const btnY = h * 0.68;
-      const btnW = w * 0.5;
-      const btnH = h * 0.06;
-      const btnX = (w - btnW) / 2;
-      const radius = btnH / 2;
-
-      // Rounded rectangle button
       ctx.fillStyle = theme.accent;
-      ctx.globalAlpha = 0.15;
-      ctx.beginPath();
-      ctx.moveTo(btnX + radius, btnY);
-      ctx.lineTo(btnX + btnW - radius, btnY);
-      ctx.quadraticCurveTo(btnX + btnW, btnY, btnX + btnW, btnY + radius);
-      ctx.lineTo(btnX + btnW, btnY + btnH - radius);
-      ctx.quadraticCurveTo(btnX + btnW, btnY + btnH, btnX + btnW - radius, btnY + btnH);
-      ctx.lineTo(btnX + radius, btnY + btnH);
-      ctx.quadraticCurveTo(btnX, btnY + btnH, btnX, btnY + btnH - radius);
-      ctx.lineTo(btnX, btnY + radius);
-      ctx.quadraticCurveTo(btnX, btnY, btnX + radius, btnY);
-      ctx.fill();
-      ctx.globalAlpha = 1;
-
-      // Button border
-      ctx.strokeStyle = theme.accent;
-      ctx.lineWidth = 1.5;
-      ctx.globalAlpha = 0.4;
-      ctx.stroke();
-      ctx.globalAlpha = 1;
-
-      // Button text
-      ctx.fillStyle = theme.title;
-      ctx.font = `${Math.floor(w * 0.028)}px ${FONTS.accent}`;
+      ctx.font = `${ctaFontSize}px ${FONTS.accent}`;
       ctx.textAlign = "center";
-      ctx.fillText(slide.cta.toUpperCase(), w / 2, btnY + btnH * 0.65);
+      ctx.fillText(slide.cta.toUpperCase(), w / 2, y + ctaFontSize * 0.8);
     }
   }
 
@@ -735,6 +776,31 @@ Available themes: light, dark, blush, pink, blue, beige, mauve, rosebrown, cream
     ctx.font = `${Math.floor(dims.width * 0.022)}px ${FONTS.accent}`;
     ctx.textAlign = "center";
     ctx.fillText("@roserenuu", dims.width / 2, dims.height * 0.96);
+  }
+
+  /**
+   * Measure how many lines wrapped text will take without drawing.
+   */
+  private measureWrappedText(
+    ctx: CanvasRenderingContext2D,
+    text: string,
+    maxWidth: number
+  ): number {
+    const words = text.split(" ");
+    let line = "";
+    let lineCount = 0;
+
+    for (let i = 0; i < words.length; i++) {
+      const testLine = line + words[i] + " ";
+      const metrics = ctx.measureText(testLine);
+      if (metrics.width > maxWidth && i > 0) {
+        line = words[i] + " ";
+        lineCount++;
+      } else {
+        line = testLine;
+      }
+    }
+    return lineCount + 1;
   }
 
   /**
