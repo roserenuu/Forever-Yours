@@ -224,6 +224,8 @@ ${getAlgorithmBriefForAgents()}
 When a user message starts with "/" followed by a skill name, execute that skill with the provided input.
 ALL slash commands listed above are valid — including /fetch, /sync, /stats, /dashboard, /import, and /connect. These data commands are handled automatically by the system. If a user asks about them or wants to use them, confirm they are available and guide them on usage.
 
+${this.connectors.getStatus()}
+
 ${this.dataStore.getSummaryForAgents()}
 
 ${this.dataStore.getTranscriptBrief()}
