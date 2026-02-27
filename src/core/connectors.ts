@@ -1000,23 +1000,44 @@ export class ConnectorManager {
    * Fetch stats from a single platform.
    */
   async fetchOne(platform: string): Promise<string> {
-    const normalized = this.normalizePlatform(platform.toLowerCase());
+    const raw = platform.toLowerCase().trim();
+
+    // "instagram" / "insta" / "ig" → fetch BOTH Instagram accounts
+    if (["instagram", "insta", "ig"].includes(raw)) {
+      const igConnectors = this.connectors.filter((c) =>
+        c.platform.startsWith("ig_")
+      );
+      if (igConnectors.length === 0) {
+        return "No Instagram accounts configured. Use /connect for setup guide.";
+      }
+      const results: string[] = [];
+      for (const c of igConnectors) {
+        results.push(await c.fetchStats());
+      }
+      return results.join("\n");
+    }
+
+    const normalized = this.normalizePlatform(raw);
     const connector = this.connectors.find(
       (c) => c.platform === normalized
     );
     if (!connector) {
-      return `Unknown platform: ${platform}. Supported: ${this.connectors.map((c) => c.platform).join(", ")}`;
+      return `Unknown platform: ${platform}. Supported: instagram, youtube, tiktok, x, ${this.connectors.map((c) => c.platform).join(", ")}`;
     }
     return connector.fetchStats();
   }
 
   private normalizePlatform(raw: string): string {
     const aliases: Record<string, string> = {
-      ig: "instagram",
-      insta: "instagram",
+      ig: "ig_roserenuu",
+      insta: "ig_roserenuu",
+      instagram: "ig_roserenuu",
+      roserenuu: "ig_roserenuu",
+      jfy: "ig_jesusforeveryours",
+      jesusforeveryours: "ig_jesusforeveryours",
       tt: "tiktok",
       yt: "youtube",
-      x: "twitter",
+      twitter: "x",
       fb: "facebook",
     };
     return aliases[raw] || raw;
