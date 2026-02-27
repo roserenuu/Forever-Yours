@@ -24,6 +24,7 @@ export class InstagramConnector implements PlatformConnector {
   private label: string;
   private handle: string;
   private token: string;
+  private openaiKey: string;
   private dataStore: DataStore;
 
   constructor(
@@ -40,6 +41,7 @@ export class InstagramConnector implements PlatformConnector {
     this.label = options.label;
     this.handle = options.handle;
     this.token = process.env[options.envVar] || "";
+    this.openaiKey = process.env.OPENAI_API_KEY || "";
   }
 
   isConfigured(): boolean {
@@ -69,14 +71,17 @@ export class InstagramConnector implements PlatformConnector {
         notes: `@${username}`,
       });
 
-      // Fetch recent media insights
+      // Fetch recent media insights (include media_url + permalink for Reel transcription)
       const mediaRes = await fetch(
-        `https://graph.instagram.com/me/media?fields=id,caption,media_type,timestamp,like_count,comments_count&limit=25&access_token=${this.token}`
+        `https://graph.instagram.com/me/media?fields=id,caption,media_type,media_url,permalink,timestamp,like_count,comments_count&limit=25&access_token=${this.token}`
       );
       const media = (await mediaRes.json()) as Record<string, unknown>;
       const posts = (media.data as Array<Record<string, unknown>>) || [];
 
       let imported = 0;
+      let transcribed = 0;
+      const MAX_TRANSCRIPTIONS = 10;
+
       for (const post of posts.slice(0, 20)) {
         try {
           const insightsRes = await fetch(
@@ -100,6 +105,26 @@ export class InstagramConnector implements PlatformConnector {
           const saves = getMetricValue("saved");
           const shares = getMetricValue("shares");
 
+          // Transcribe VIDEO/REEL posts so Navi can analyze what Rose is saying
+          let transcript: string | undefined;
+          if (
+            post.media_type === "VIDEO" &&
+            post.media_url &&
+            this.openaiKey &&
+            transcribed < MAX_TRANSCRIPTIONS
+          ) {
+            transcript =
+              (await this.transcribeVideo(
+                post.media_url as string,
+                post.id as string
+              )) || undefined;
+            if (transcript) transcribed++;
+            // Small delay between transcription requests
+            if (transcribed < MAX_TRANSCRIPTIONS) {
+              await new Promise((r) => setTimeout(r, 1500));
+            }
+          }
+
           this.dataStore.addContent({
             platform: this.platform,
             contentType: ((post.media_type as string) || "post").toLowerCase(),
@@ -111,6 +136,7 @@ export class InstagramConnector implements PlatformConnector {
             saves: saves as number,
             shares: shares as number,
             postedAt: post.timestamp as string,
+            transcript,
           });
           imported++;
         } catch {
@@ -118,10 +144,99 @@ export class InstagramConnector implements PlatformConnector {
         }
       }
 
-      return `${this.label} (@${username}) synced: ${followers.toLocaleString()} followers, ${imported} recent posts imported`;
+      const transcriptNote = transcribed > 0 ? `, ${transcribed} Reels transcribed` : "";
+      return `${this.label} (@${username}) synced: ${followers.toLocaleString()} followers, ${imported} recent posts imported${transcriptNote}`;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       return `${this.label} fetch failed: ${message}`;
+    }
+  }
+
+  /**
+   * Download an Instagram Reel/Video and transcribe it via OpenAI Whisper API.
+   * Returns the spoken transcript text, or null if transcription fails.
+   */
+  private async transcribeVideo(
+    mediaUrl: string,
+    postId: string
+  ): Promise<string | null> {
+    try {
+      // Download video from Instagram CDN
+      const videoRes = await fetch(mediaUrl, { redirect: "follow" });
+      if (!videoRes.ok) {
+        console.log(
+          `  [${this.label}] Video download failed for ${postId}: HTTP ${videoRes.status}`
+        );
+        return null;
+      }
+
+      const videoBuffer = Buffer.from(await videoRes.arrayBuffer());
+
+      // Skip if too large for Whisper API (25MB limit)
+      if (videoBuffer.length > 25 * 1024 * 1024) {
+        console.log(
+          `  [${this.label}] Video too large to transcribe: ${(videoBuffer.length / 1024 / 1024).toFixed(1)}MB`
+        );
+        return null;
+      }
+
+      // Build multipart form data for Whisper API
+      const boundary = "----WhisperBoundary" + Date.now();
+      const body = Buffer.concat([
+        Buffer.from(
+          `--${boundary}\r\n` +
+            `Content-Disposition: form-data; name="file"; filename="ig_${postId}.mp4"\r\n` +
+            `Content-Type: video/mp4\r\n\r\n`
+        ),
+        videoBuffer,
+        Buffer.from(
+          `\r\n--${boundary}\r\n` +
+            `Content-Disposition: form-data; name="model"\r\n\r\n` +
+            `whisper-1\r\n` +
+            `--${boundary}--\r\n`
+        ),
+      ]);
+
+      const whisperRes = await fetch(
+        "https://api.openai.com/v1/audio/transcriptions",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${this.openaiKey}`,
+            "Content-Type": `multipart/form-data; boundary=${boundary}`,
+          },
+          body,
+        }
+      );
+
+      if (!whisperRes.ok) {
+        const errText = await whisperRes.text().catch(() => "");
+        console.log(
+          `  [${this.label}] Whisper API error for ${postId}: HTTP ${whisperRes.status} ${errText.slice(0, 200)}`
+        );
+        return null;
+      }
+
+      const result = (await whisperRes.json()) as { text?: string };
+      const text = result.text?.trim();
+
+      // Skip empty or very short transcripts (probably just music, no speech)
+      if (!text || text.length < 10) {
+        console.log(
+          `  [${this.label}] No meaningful speech detected in ${postId}`
+        );
+        return null;
+      }
+
+      console.log(
+        `  [${this.label}] Transcribed ${postId}: "${text.slice(0, 80)}${text.length > 80 ? "..." : ""}"`
+      );
+      return text;
+    } catch (err) {
+      console.log(
+        `  [${this.label}] Transcription failed for ${postId}: ${err instanceof Error ? err.message : err}`
+      );
+      return null;
     }
   }
 }

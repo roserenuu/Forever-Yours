@@ -181,20 +181,26 @@ export class DataStore {
   /**
    * Get a transcript-focused brief for agents that need to analyze
    * what Rose is saying in her videos and how it correlates with performance.
-   * Sorted by views (best-performing first) so agents see what works.
+   * Includes YouTube AND Instagram Reel transcripts.
+   * Sorted by performance (best first) so agents see what works.
    */
   getTranscriptBrief(): string {
     const withTranscripts = this.data.recentContent
-      .filter((c) => c.platform === "youtube" && c.transcript)
-      .sort((a, b) => (b.views || 0) - (a.views || 0));
+      .filter((c) => c.transcript)
+      .sort((a, b) => (b.views || b.reach || 0) - (a.views || a.reach || 0));
 
     if (withTranscripts.length === 0) {
       return "";
     }
 
-    let brief = "### YouTube Video Transcripts (sorted by views, best first)\n\n";
+    let brief = "### Video Transcripts (sorted by performance, best first)\n\n";
     for (const c of withTranscripts) {
-      brief += `**[${c.contentType.toUpperCase()}] "${c.topic}"** — ${(c.views || 0).toLocaleString()} views | ${(c.likes || 0).toLocaleString()} likes | ${(c.comments || 0).toLocaleString()} comments`;
+      const metric = c.views
+        ? `${(c.views).toLocaleString()} views`
+        : `${(c.reach || 0).toLocaleString()} reach`;
+      brief += `**[${c.platform.toUpperCase()}/${c.contentType.toUpperCase()}] "${c.topic}"** — ${metric} | ${(c.likes || 0).toLocaleString()} likes | ${(c.comments || 0).toLocaleString()} comments`;
+      if (c.saves) brief += ` | ${c.saves.toLocaleString()} saves`;
+      if (c.shares) brief += ` | ${c.shares.toLocaleString()} shares`;
       if (c.postedAt) brief += ` | Posted: ${c.postedAt.split("T")[0]}`;
       brief += `\nTranscript: ${c.transcript}\n\n`;
     }
