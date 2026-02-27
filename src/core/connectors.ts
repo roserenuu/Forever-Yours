@@ -48,32 +48,105 @@ export class InstagramConnector implements PlatformConnector {
     return this.token.length > 0;
   }
 
+  /**
+   * Discover the Instagram Business/Creator Account ID via the Facebook Graph API.
+   * The token must have pages_show_list + instagram_basic permissions.
+   * Flow: User Token → Facebook Pages → Page's instagram_business_account → IG ID
+   */
+  private async discoverIgAccountId(): Promise<{
+    igId: string;
+    username: string;
+    followersCount: number;
+    mediaCount: number;
+  } | null> {
+    // Step 1: Get Facebook Pages the user manages
+    const pagesRes = await fetch(
+      `https://graph.facebook.com/v21.0/me/accounts?fields=id,name,instagram_business_account&access_token=${this.token}`
+    );
+    const pagesData = (await pagesRes.json()) as Record<string, unknown>;
+
+    if (pagesData.error) {
+      throw new Error(
+        (pagesData.error as Record<string, string>).message || "Failed to fetch Facebook Pages"
+      );
+    }
+
+    const pages = (pagesData.data as Array<Record<string, unknown>>) || [];
+
+    // Step 2: Find the page with an Instagram Business Account
+    for (const page of pages) {
+      const igAccount = page.instagram_business_account as Record<string, string> | undefined;
+      if (!igAccount?.id) continue;
+
+      // Step 3: Get IG account details to match by handle
+      const igRes = await fetch(
+        `https://graph.facebook.com/v21.0/${igAccount.id}?fields=id,username,followers_count,media_count&access_token=${this.token}`
+      );
+      const igData = (await igRes.json()) as Record<string, unknown>;
+
+      if (igData.error) continue;
+
+      const username = (igData.username as string) || "";
+
+      // Match by handle, or if there's only one page, use it
+      if (
+        username.toLowerCase() === this.handle.toLowerCase() ||
+        pages.length === 1
+      ) {
+        return {
+          igId: igAccount.id,
+          username,
+          followersCount: (igData.followers_count as number) || 0,
+          mediaCount: (igData.media_count as number) || 0,
+        };
+      }
+    }
+
+    // If no exact match found but pages exist, try the first one with an IG account
+    for (const page of pages) {
+      const igAccount = page.instagram_business_account as Record<string, string> | undefined;
+      if (igAccount?.id) {
+        const igRes = await fetch(
+          `https://graph.facebook.com/v21.0/${igAccount.id}?fields=id,username,followers_count,media_count&access_token=${this.token}`
+        );
+        const igData = (await igRes.json()) as Record<string, unknown>;
+        if (!igData.error) {
+          return {
+            igId: igAccount.id,
+            username: (igData.username as string) || "",
+            followersCount: (igData.followers_count as number) || 0,
+            mediaCount: (igData.media_count as number) || 0,
+          };
+        }
+      }
+    }
+
+    return null;
+  }
+
   async fetchStats(): Promise<string> {
     if (!this.isConfigured()) {
       return `${this.label} (@${this.handle}) not connected. Set the token in .env`;
     }
 
     try {
-      // Fetch account info
-      const accountRes = await fetch(
-        `https://graph.instagram.com/me?fields=id,username,followers_count,media_count&access_token=${this.token}`
-      );
-      const account = (await accountRes.json()) as Record<string, unknown>;
+      // Discover Instagram Business Account ID via Facebook Graph API
+      const igAccount = await this.discoverIgAccountId();
 
-      if (account.error) {
-        return `${this.label} API error: ${(account.error as Record<string, string>).message}`;
+      if (!igAccount) {
+        return `${this.label} error: Could not find an Instagram Business/Creator account linked to this token. Make sure the Facebook Page is connected to @${this.handle} and the token has pages_show_list + instagram_basic permissions.`;
       }
 
-      const followers = (account.followers_count as number) || 0;
-      const username = (account.username as string) || this.handle;
+      const { igId, username, followersCount: followers } = igAccount;
+
       this.dataStore.updatePlatform(this.platform, {
         followers,
         notes: `@${username}`,
       });
 
-      // Fetch recent media insights (include media_url + permalink for Reel transcription)
+      // Fetch recent media via Facebook Graph API (Instagram Graph API endpoint)
       const mediaRes = await fetch(
-        `https://graph.instagram.com/me/media?fields=id,caption,media_type,media_url,permalink,timestamp,like_count,comments_count&limit=25&access_token=${this.token}`
+        `https://graph.facebook.com/v21.0/${igId}/media?fields=id,caption,media_type,media_url,permalink,timestamp,like_count,comments_count&limit=25&access_token=${this.token}`
       );
       const media = (await mediaRes.json()) as Record<string, unknown>;
       const posts = (media.data as Array<Record<string, unknown>>) || [];
@@ -85,7 +158,7 @@ export class InstagramConnector implements PlatformConnector {
       for (const post of posts.slice(0, 20)) {
         try {
           const insightsRes = await fetch(
-            `https://graph.instagram.com/${post.id}/insights?metric=reach,saved,shares&access_token=${this.token}`
+            `https://graph.facebook.com/v21.0/${post.id}/insights?metric=reach,saved,shares&access_token=${this.token}`
           );
           const insights = (await insightsRes.json()) as Record<
             string,
