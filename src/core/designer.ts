@@ -703,13 +703,14 @@ Available layouts: title, body, scripture, cta, repetition, highlight, whisper, 
       totalH += bodyH;
     }
 
-    let y = (h - totalH) / 2;
+    let y = Math.max(h * 0.05, (h - totalH) / 2);
+    ctx.textBaseline = "middle";
 
     if (slide.accent) {
       ctx.fillStyle = theme.accent;
       ctx.font = fontString("delicate", accentSize, "normal", "italic");
       ctx.textAlign = "center";
-      ctx.fillText(slide.accent.toUpperCase(), w / 2, y + accentSize * 0.8);
+      ctx.fillText(slide.accent.toUpperCase(), w / 2, y + accentSize / 2);
       y += accentH + gap;
     }
 
@@ -717,7 +718,7 @@ Available layouts: title, body, scripture, cta, repetition, highlight, whisper, 
       ctx.fillStyle = theme.title;
       ctx.font = fontString(fStyle, titleSize, "bold");
       ctx.textAlign = "center";
-      this.wrapText(ctx, slide.title, w / 2, y + titleLineH * 0.8, maxWidth, titleLineH);
+      this.wrapText(ctx, slide.title, w / 2, y + titleLineH / 2, maxWidth, titleLineH);
       y += titleH + gap;
     }
 
@@ -776,13 +777,14 @@ Available layouts: title, body, scripture, cta, repetition, highlight, whisper, 
       totalH += refH;
     }
 
-    let y = (h - totalH) / 2;
+    let y = Math.max(h * 0.05, (h - totalH) / 2);
+    ctx.textBaseline = "middle";
 
     if (slide.title) {
       ctx.fillStyle = theme.title;
       ctx.font = fontString(fStyle, titleSize, "bold");
       ctx.textAlign = "center";
-      this.wrapText(ctx, slide.title, w / 2, y + titleLineH * 0.8, maxWidth, titleLineH);
+      this.wrapText(ctx, slide.title, w / 2, y + titleLineH / 2, maxWidth, titleLineH);
       y += titleH + gap;
     }
 
@@ -796,7 +798,7 @@ Available layouts: title, body, scripture, cta, repetition, highlight, whisper, 
       ctx.fillStyle = theme.scripture;
       ctx.font = fontString("delicate", scriptureSize, "normal", "italic");
       ctx.textAlign = "center";
-      this.wrapText(ctx, `\u201C${slide.scripture}\u201D`, w / 2, y + scriptureLineH * 0.8, maxWidth, scriptureLineH);
+      this.wrapText(ctx, `\u201C${slide.scripture}\u201D`, w / 2, y + scriptureLineH / 2, maxWidth, scriptureLineH);
       y += scriptureH + gap * 0.5;
     }
 
@@ -804,7 +806,7 @@ Available layouts: title, body, scripture, cta, repetition, highlight, whisper, 
       ctx.fillStyle = theme.scripture;
       ctx.font = fontString("delicate", refSize, "bold", "italic");
       ctx.textAlign = "center";
-      ctx.fillText(`\u2014 ${slide.scriptureRef}`, w / 2, y + refSize * 0.8);
+      ctx.fillText(`\u2014 ${slide.scriptureRef}`, w / 2, y + refSize / 2);
     }
   }
 
@@ -844,13 +846,14 @@ Available layouts: title, body, scripture, cta, repetition, highlight, whisper, 
       totalH += refH;
     }
 
-    let y = (h - totalH) / 2;
+    let y = Math.max(h * 0.05, (h - totalH) / 2);
+    ctx.textBaseline = "middle";
 
     if (text) {
       ctx.fillStyle = theme.body;
       ctx.font = fontString(actualStyle, scriptureSize, "normal", "italic");
       ctx.textAlign = "center";
-      this.wrapText(ctx, text, w / 2, y + scriptureLineH * 0.8, maxWidth, scriptureLineH);
+      this.wrapText(ctx, text, w / 2, y + scriptureLineH / 2, maxWidth, scriptureLineH);
       y += scriptureH + gap;
     }
 
@@ -858,7 +861,7 @@ Available layouts: title, body, scripture, cta, repetition, highlight, whisper, 
       ctx.fillStyle = theme.scripture;
       ctx.font = fontString(actualStyle, refSize, "bold");
       ctx.textAlign = "center";
-      ctx.fillText(slide.scriptureRef, w / 2, y + refSize * 0.8);
+      ctx.fillText(slide.scriptureRef, w / 2, y + refSize / 2);
     }
   }
 
@@ -904,13 +907,14 @@ Available layouts: title, body, scripture, cta, repetition, highlight, whisper, 
       totalH += ctaH;
     }
 
-    let y = (h - totalH) / 2;
+    let y = Math.max(h * 0.05, (h - totalH) / 2);
+    ctx.textBaseline = "middle";
 
     if (headingText) {
       ctx.fillStyle = theme.title;
       ctx.font = fontString(fStyle, headingSize, "bold");
       ctx.textAlign = "center";
-      this.wrapText(ctx, headingText, w / 2, y + headingLineH * 0.8, maxWidth, headingLineH);
+      this.wrapText(ctx, headingText, w / 2, y + headingLineH / 2, maxWidth, headingLineH);
       y += headingH + gap;
     }
 
@@ -924,7 +928,7 @@ Available layouts: title, body, scripture, cta, repetition, highlight, whisper, 
       ctx.fillStyle = theme.accent;
       ctx.font = fontString("condensed", ctaSize);
       ctx.textAlign = "center";
-      ctx.fillText(slide.cta.toUpperCase(), w / 2, y + ctaSize * 0.8);
+      ctx.fillText(slide.cta.toUpperCase(), w / 2, y + ctaSize / 2);
     }
   }
 
@@ -959,6 +963,7 @@ Available layouts: title, body, scripture, cta, repetition, highlight, whisper, 
     const minOpacity = 0.2;
 
     ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
 
     for (let i = 0; i < count; i++) {
       const progress = i / (count - 1);
@@ -973,7 +978,7 @@ Available layouts: title, body, scripture, cta, repetition, highlight, whisper, 
       ctx.globalAlpha = opacity;
       ctx.fillStyle = theme.title;
 
-      const y = startY + i * lineGap + size * 0.8;
+      const y = startY + i * lineGap + lineGap / 2;
       this.wrapText(ctx, phrase, w / 2, y, maxWidth, size * 1.2);
     }
 
@@ -1007,13 +1012,14 @@ Available layouts: title, body, scripture, cta, repetition, highlight, whisper, 
     ctx.font = fontString(fStyle, bodySize);
     const lines = this.getWrappedLines(ctx, this.stripMarkers(text), maxWidth);
     const totalH = lines.length * bodyLineH;
-    let y = (h - totalH) / 2;
+    let y = Math.max(h * 0.05, (h - totalH) / 2);
 
     ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
 
     // Draw each line, highlighting the target phrase
     for (const line of lines) {
-      const lineY = y + bodySize * 0.8;
+      const lineY = y + bodyLineH / 2;
 
       if (highlightPhrase && line.toLowerCase().includes(highlightPhrase.toLowerCase())) {
         // Find the highlight phrase bounds
@@ -1032,9 +1038,9 @@ Available layouts: title, body, scripture, cta, repetition, highlight, whisper, 
         const hlX = lineStartX + beforeW;
         const hlPad = bodySize * 0.15;
 
-        // Draw highlight rectangle
+        // Draw highlight rectangle centered on the text
         ctx.fillStyle = theme.highlightBg;
-        ctx.fillRect(hlX - hlPad, lineY - bodySize * 0.85, phraseW + hlPad * 2, bodySize * 1.15);
+        ctx.fillRect(hlX - hlPad, lineY - bodySize * 0.55, phraseW + hlPad * 2, bodySize * 1.1);
 
         // Draw full line text on top
         ctx.fillStyle = theme.body;
@@ -1073,13 +1079,14 @@ Available layouts: title, body, scripture, cta, repetition, highlight, whisper, 
     ctx.font = fontString("delicate", bodySize, "normal", "italic");
     const lines = this.getWrappedLines(ctx, text, maxWidth);
     const totalH = lines.length * bodyLineH;
-    let y = (h - totalH) / 2;
+    let y = Math.max(h * 0.05, (h - totalH) / 2);
 
     ctx.fillStyle = theme.body;
     ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
 
     for (const line of lines) {
-      ctx.fillText(line, w / 2, y + bodySize * 0.8);
+      ctx.fillText(line, w / 2, y + bodyLineH / 2);
       y += bodyLineH;
     }
   }
@@ -1106,13 +1113,14 @@ Available layouts: title, body, scripture, cta, repetition, highlight, whisper, 
     ctx.font = fontString("condensed", titleSize, "bold");
     const lines = this.getWrappedLines(ctx, text, maxWidth);
     const totalH = lines.length * titleLineH;
-    let y = (h - totalH) / 2;
+    let y = Math.max(h * 0.05, (h - totalH) / 2);
 
     ctx.fillStyle = theme.title;
     ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
 
     for (const line of lines) {
-      ctx.fillText(line, w / 2, y + titleSize * 0.8);
+      ctx.fillText(line, w / 2, y + titleLineH / 2);
       y += titleLineH;
     }
   }
@@ -1139,13 +1147,14 @@ Available layouts: title, body, scripture, cta, repetition, highlight, whisper, 
     ctx.font = fontString("handwritten", bodySize);
     const lines = this.getWrappedLines(ctx, text, maxWidth);
     const totalH = lines.length * bodyLineH;
-    let y = (h - totalH) / 2;
+    let y = Math.max(h * 0.05, (h - totalH) / 2);
 
     ctx.fillStyle = theme.body;
     ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
 
     for (const line of lines) {
-      ctx.fillText(line, w / 2, y + bodySize * 0.8);
+      ctx.fillText(line, w / 2, y + bodyLineH / 2);
       y += bodyLineH;
     }
   }
@@ -1172,13 +1181,14 @@ Available layouts: title, body, scripture, cta, repetition, highlight, whisper, 
     ctx.font = fontString("script", bodySize);
     const lines = this.getWrappedLines(ctx, text, maxWidth);
     const totalH = lines.length * bodyLineH;
-    let y = (h - totalH) / 2;
+    let y = Math.max(h * 0.05, (h - totalH) / 2);
 
     ctx.fillStyle = theme.title;
     ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
 
     for (const line of lines) {
-      ctx.fillText(line, w / 2, y + bodySize * 0.8);
+      ctx.fillText(line, w / 2, y + bodyLineH / 2);
       y += bodyLineH;
     }
   }
@@ -1201,8 +1211,7 @@ Available layouts: title, body, scripture, cta, repetition, highlight, whisper, 
     if (!text.includes("**") && !text.includes("*")) {
       ctx.font = fontString(fStyle, fontSize);
       ctx.textAlign = "center";
-      const y = startY + lineHeight * 0.8;
-      this.wrapText(ctx, text, centerX, y, maxWidth, lineHeight);
+      this.wrapText(ctx, text, centerX, startY + lineHeight / 2, maxWidth, lineHeight);
       return;
     }
 
@@ -1216,9 +1225,11 @@ Available layouts: title, body, scripture, cta, repetition, highlight, whisper, 
 
     let charIdx = 0;
 
+    ctx.textBaseline = "middle";
+
     for (let lineNum = 0; lineNum < lines.length; lineNum++) {
       const line = lines[lineNum];
-      const y = startY + lineNum * lineHeight + lineHeight * 0.8;
+      const y = startY + lineNum * lineHeight + lineHeight / 2;
 
       // Measure full line width for centering
       ctx.font = fontString(fStyle, fontSize);
@@ -1353,6 +1364,7 @@ Available layouts: title, body, scripture, cta, repetition, highlight, whisper, 
     lineHeight: number
   ): number {
     const lines = this.getWrappedLines(ctx, text, maxWidth);
+    ctx.textBaseline = "middle";
     for (let i = 0; i < lines.length; i++) {
       ctx.fillText(lines[i], x, y + i * lineHeight);
     }
