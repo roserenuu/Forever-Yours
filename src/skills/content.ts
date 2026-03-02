@@ -327,10 +327,21 @@ export const powerfulScripturesSkill: Skill = {
   ],
   async execute(ctx: SkillContext): Promise<SkillResult> {
     const input = (ctx.input || "").trim();
-    const dayMatch = input.match(/day\s*(\d+)/i);
+    const dayMatch = input.match(/\b(\d+)\b/);
     const dayNum = dayMatch ? parseInt(dayMatch[1], 10) : null;
 
-    if (dayNum !== null && dayNum >= 1 && dayNum <= 24) {
+    // No day specified — ask for it
+    if (!input || (dayNum === null)) {
+      return {
+        title: "Powerful Scriptures — Which Day?",
+        content: `Which day would you like? (1–24)\n\nJust reply with the number — for example: /scripture 5`,
+        suggestions: POWERFUL_SCRIPTURES_DAYS.map(
+          (d) => `Day ${d.day}: ${d.title}`
+        ),
+      };
+    }
+
+    if (dayNum >= 1 && dayNum <= 24) {
       const entry = POWERFUL_SCRIPTURES_DAYS[dayNum - 1];
       const post = `Powerful Scriptures You Should Know — Day ${entry.day}
 
@@ -356,63 +367,11 @@ Heavenly Father`;
       };
     }
 
-    // Generate a fresh one for any topic
-    const topic = input || "God's love and faithfulness";
-    const example = POWERFUL_SCRIPTURES_DAYS[0];
-    const response = await ctx.agent.generateContent(
-      `Write a "Powerful Scriptures You Should Know" post for Rose Renuu's brand.
-
-Topic/Theme: ${topic}
-
-This series comes from Rose's devotional "Forever Yours: 24 Days with Jesus." Each post highlights one powerful Bible verse (NLT) then expands on it with a short, personal message from God's perspective.
-
-EXACT FORMAT:
----
-Powerful Scriptures You Should Know — Daily
-
-"[Full verse text]" — [Book Chapter:Verse] NLT
-
-This is what God is telling you today…
-
-[2-4 sentences in God's voice. Personal, direct, warm. NOT preachy. NOT generic. Should feel like God speaking straight to the reader's heart about this specific topic. Use "you" and "I" throughout.]
-
-Forever Yours,
-Heavenly Father
----
-
-EXAMPLE:
-Powerful Scriptures You Should Know — Day 1
-
-${example.verse}
-
-This is what God is telling you today…
-
-${example.message}
-
-Forever Yours,
-Heavenly Father
-
-RULES:
-- NLT translation always — include the full verse text, not just a reference
-- The message: 2-4 sentences only — punchy, personal, quotable
-- God's voice: intimate, tender, honest — like a parent speaking to a beloved child
-- No emojis inside the post
-- No churchy jargon (no "blessed and highly favored", "season of abundance", etc.)
-- Every word should earn its place — this is meant to be screenshot and shared
-
-Write ONLY the post, nothing else.`
-    );
-
+    // Number out of range
     return {
-      title: "Powerful Scriptures Post",
-      content: response,
-      suggestions: [
-        "Post as a text graphic — simple, clean, powerful",
-        "Perfect for TikTok text overlay videos — no talking needed",
-        "Pin this to your Instagram profile grid",
-        "Ask followers: 'Which line hit you today?' — drives comments",
-        "Use /scripture day 1 through day 24 for all 24 devotional posts",
-      ],
+      title: "Powerful Scriptures — Invalid Day",
+      content: `The series goes from Day 1 to Day 24. Which day would you like?\n\nExample: /scripture 12`,
+      suggestions: [],
     };
   },
 };
