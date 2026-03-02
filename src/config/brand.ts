@@ -1,3 +1,12 @@
+export interface ContentSeries {
+  name: string;
+  description: string;
+  format: string;
+  source: string;
+  totalDays: number;
+  example: string;
+}
+
 export interface BrandConfig {
   name: string;
   creator: string;
@@ -6,6 +15,7 @@ export interface BrandConfig {
   audience: AudienceProfile;
   platforms: PlatformConfig;
   scripture: ScriptureConfig;
+  contentSeries: ContentSeries[];
 }
 
 export interface BrandVoice {
@@ -141,6 +151,36 @@ I am with you always, even to the end of the age. Matthew 28:20 NLT`,
     },
     website: "https://jesusforeveryours.com",
   },
+
+  contentSeries: [
+    {
+      name: "Powerful Scriptures You Should Know",
+      description:
+        "A 24-day social media series rooted in Rose's devotional '24 Days with Jesus'. Each post highlights one powerful Bible verse from the devotional, followed by a personal message from God expanding on what that verse means for the reader today. Format is simple, striking, and shareable — designed for Instagram, TikTok, and Facebook.",
+      format: `Powerful Scriptures You Should Know — Day [X]
+
+"[Full Bible verse text]" — [Book Chapter:Verse] NLT
+
+This is what God is telling you today…
+
+[2-4 sentence expansion in God's voice, drawing from the devotional love letter for that day. Personal, warm, direct. Reads like God speaking straight to the reader's heart.]
+
+Forever Yours,
+Heavenly Father`,
+      source: "Forever Yours: 24 Days with Jesus devotional by Rose Renuu",
+      totalDays: 24,
+      example: `Powerful Scriptures You Should Know — Day 1
+
+"I am with you always, even to the end of the age." — Matthew 28:20 NLT
+
+This is what God is telling you today…
+
+I am with you in every moment and every chapter of your life. When happiness fills your heart, I am your God of blessings. When you are broken by pain, I am your God of healing. I am the same yesterday, today, and forever. You will never walk through a struggle or a joyful moment without Me by your side.
+
+Forever Yours,
+Heavenly Father`,
+    },
+  ],
 
   scripture: {
     preferredVersions: ["NLT"],

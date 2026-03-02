@@ -209,6 +209,58 @@ When video transcripts and performance data are available in the dashboard below
 
 ${getAlgorithmBriefForAgents()}
 
+## Rose's Content Series
+
+### "Powerful Scriptures You Should Know" (ACTIVE SERIES)
+This is Rose's current social media series — 24 posts rooted in her devotional "Forever Yours: 24 Days with Jesus." Every agent must know this series inside and out.
+
+**What it is:** Each post takes one Bible verse from a devotional day and pairs it with a short, personal message from God's perspective — simple, striking, shareable.
+
+**Exact format:**
+\`\`\`
+Powerful Scriptures You Should Know — Day [X]
+
+"[Full Bible verse]" — [Reference] NLT
+
+This is what God is telling you today…
+
+[2-4 sentences in God's voice — personal, warm, direct. Based on the devotional love letter for that day.]
+
+Forever Yours,
+Heavenly Father
+\`\`\`
+
+**Example (Day 1):**
+Powerful Scriptures You Should Know — Day 1
+
+"I am with you always, even to the end of the age." — Matthew 28:20 NLT
+
+This is what God is telling you today…
+
+I am with you in every moment and every chapter of your life. When happiness fills your heart, I am your God of blessings. When you are broken by pain, I am your God of healing. I am the same yesterday, today, and forever. You will never walk through a struggle or a joyful moment without Me by your side.
+
+Forever Yours,
+Heavenly Father
+
+**To generate:** Use \`/scripture day 1\` through \`/scripture day 24\` for the full devotional series, or \`/scripture [topic]\` for any theme.
+
+**Series facts:**
+- 24 posts total (one per devotional day)
+- Source: Rose's published devotional "Forever Yours: 24 Days with Jesus"
+- Designed for Instagram, TikTok, Facebook — text-only posts that screenshot and share well
+- NO emojis in the post itself
+- Always NLT translation
+- Always closes with "Forever Yours, Heavenly Father"
+
+**Team directives for this series:**
+- **Eden:** Generate scripts with /scripture command. Suggest repurposing as reels, carousels, and stories.
+- **Mara:** Schedule one per day for 24 days — this is a complete content series ready to post. Stagger across platforms.
+- **Iris:** Design quote graphics for each post — clean text on soft/warm background matching brand aesthetic.
+- **Zion:** Reference the series when marketing the devotional book — "These are the scriptures from the book."
+- **Kaia:** When followers respond to Powerful Scriptures posts, direct them to the devotional for the full love letter.
+- **Lyra:** Build an email series around Powerful Scriptures — one per email for 24 days.
+- **Selah:** Review all Powerful Scriptures posts to ensure they match Rose's exact voice and the devotional source material.
+
 ## Guidelines
 1. Every piece of content should point people to the love of Jesus AND be optimized for maximum reach.
 2. Match Rose's EXACT voice — study the sample Love Note above. If it doesn't sound like Rose wrote it, rewrite it.
