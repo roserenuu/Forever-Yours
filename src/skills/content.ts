@@ -287,10 +287,75 @@ Write ONLY the carousel content, nothing else.`
   },
 };
 
+export const powerfulScriptureSkill: Skill = {
+  name: "scripture",
+  description:
+    "Generate a Powerful Scriptures post — a single daily scripture script based on Rose's '24 Days with Jesus' devotional. Specify a day number (1-24).",
+  examples: [
+    "/scripture 1",
+    "/scripture 7",
+    "/scripture 14",
+    "/scripture 24",
+  ],
+  async execute(ctx: SkillContext): Promise<SkillResult> {
+    const input = ctx.input.trim();
+    const dayNum = parseInt(input, 10);
+
+    // If no valid day number provided, ask which day
+    if (!input || isNaN(dayNum) || dayNum < 1 || dayNum > 24) {
+      return {
+        title: "Powerful Scriptures",
+        content: `**Which day would you like?**\n\nThis series is based on the *Forever Yours: 24 Days with Jesus* devotional.\n\nJust type \`/scripture [day number]\` — for example:\n- \`/scripture 1\` — Day 1: Forever With You\n- \`/scripture 5\` — Day 5: Heaven Holds You Close\n- \`/scripture 12\` — Day 12: The Peace You Need\n- \`/scripture 24\` — Day 24: Paid By Love\n\nPick any day from 1 to 24 and I'll write your Powerful Scriptures post for that day.`,
+      };
+    }
+
+    const response = await ctx.agent.generateContent(
+      `Write a "Powerful Scriptures" social media script for Day ${dayNum} from Rose's devotional "Forever Yours: 24 Days with Jesus."
+
+IMPORTANT: Pull the EXACT scripture verse and love letter content from Day ${dayNum} of the devotional. Do NOT make up or paraphrase the scripture — use the exact verse and reference from that day in the devotional.
+
+EXACT FORMAT (follow precisely — this is a script meant to be read aloud or posted as text):
+
+Line 1: "Powerful scriptures you should know Day ${dayNum}."
+
+Line 2: "[Exact Bible verse from Day ${dayNum} of the devotional]. [Book Chapter:Verse]."
+
+Line 3: "This is what God is telling you today…"
+
+Line 4: [Select the most powerful and impactful lines from the Day ${dayNum} love letter. Condense the love letter into 3-5 of the strongest sentences that capture the heart of the message. Do NOT use the full letter — pick the lines that hit hardest. Keep the original wording from the devotional as much as possible.]
+
+Line 5: "Forever Yours, Heavenly Father."
+
+RULES:
+- Pull DIRECTLY from Day ${dayNum} of the "Forever Yours: 24 Days with Jesus" devotional
+- Use the EXACT Bible verse and reference from that day — do not substitute a different verse
+- The condensed message should be 3-5 sentences selected from the actual love letter for that day
+- Keep Rose's original wording — do not rewrite or paraphrase heavily
+- This is ONE post only — do not generate multiple days
+- No emojis in the script itself
+- Each line should be on its own line with a blank line between them for readability
+- Use quotation marks around the verse and the message portions as shown in the format
+
+Write ONLY the Powerful Scriptures script, nothing else.`
+    );
+
+    return {
+      title: `Powerful Scriptures — Day ${dayNum}`,
+      content: response,
+      suggestions: [
+        "Post as a text-based Instagram carousel or single slide",
+        "Use as a voiceover script for a Reel or TikTok",
+        "Share as an Instagram Story series",
+      ],
+    };
+  },
+};
+
 export const contentSkills = [
   loveNoteSkill,
   captionSkill,
   reelScriptSkill,
   devotionalSkill,
   carouselSkill,
+  powerfulScriptureSkill,
 ];
