@@ -312,31 +312,40 @@ export const powerfulScriptureSkill: Skill = {
     const response = await ctx.agent.generateContent(
       `Write a "Powerful Scriptures" social media script for Day ${dayNum} from Rose's devotional "Forever Yours: 24 Days with Jesus."
 
-IMPORTANT: Pull the EXACT scripture verse and love letter content from Day ${dayNum} of the devotional. Do NOT make up or paraphrase the scripture — use the exact verse and reference from that day in the devotional.
+IMPORTANT: You MUST pull the EXACT scripture verse and love letter content from Day ${dayNum} of the devotional. Do NOT make up content — use the real verse and real love letter from that specific day.
 
-EXACT FORMAT (follow precisely — this is a script meant to be read aloud or posted as text):
+HERE IS THE EXACT STYLE AND FORMAT — this is Rose's real Day 1 example. Your output for Day ${dayNum} must match this structure EXACTLY:
 
-Line 1: "Powerful scriptures you should know Day ${dayNum}."
+---
+Powerful scriptures you should know Day 1.
 
-Line 2: "[Exact Bible verse from Day ${dayNum} of the devotional]. [Book Chapter:Verse]."
+"I am with you always, even to the end of the age. Matthew 28:20."
 
-Line 3: "This is what God is telling you today…"
+This is what God is telling you today…
 
-Line 4: [Select the most powerful and impactful lines from the Day ${dayNum} love letter. Condense the love letter into 3-5 of the strongest sentences that capture the heart of the message. Do NOT use the full letter — pick the lines that hit hardest. Keep the original wording from the devotional as much as possible.]
+"I am with you in every moment and every chapter of your life. When happiness fills your heart, I am your God of blessings. When you are broken by pain, I am your God of healing. I am the same yesterday, today, and forever. You will never walk through a struggle or a joyful moment without Me by your side."
 
-Line 5: "Forever Yours, Heavenly Father."
+Forever Yours, Heavenly Father.
+---
+
+NOW write the same thing for Day ${dayNum}. Follow this EXACT structure:
+
+1. "Powerful scriptures you should know Day ${dayNum}." — the header line
+2. The EXACT Bible verse from Day ${dayNum} of the devotional in quotes, with the book, chapter, and verse reference at the end
+3. "This is what God is telling you today…" — this line is always the same
+4. The most powerful 3-5 sentences from the Day ${dayNum} love letter in quotes — pull directly from the devotional, keep Rose's original wording, just pick the lines that hit hardest
+5. "Forever Yours, Heavenly Father." — the closing line is always the same
 
 RULES:
-- Pull DIRECTLY from Day ${dayNum} of the "Forever Yours: 24 Days with Jesus" devotional
-- Use the EXACT Bible verse and reference from that day — do not substitute a different verse
-- The condensed message should be 3-5 sentences selected from the actual love letter for that day
-- Keep Rose's original wording — do not rewrite or paraphrase heavily
-- This is ONE post only — do not generate multiple days
-- No emojis in the script itself
-- Each line should be on its own line with a blank line between them for readability
-- Use quotation marks around the verse and the message portions as shown in the format
+- Match the example above EXACTLY in structure and spacing
+- Use the REAL scripture and love letter content from Day ${dayNum} of the devotional — do not substitute or make up content
+- Keep Rose's original wording from the devotional — do not rewrite or paraphrase
+- ONE post only — just Day ${dayNum}
+- No emojis
+- No extra commentary, headers, or labels — just the script itself
+- Blank line between each section for readability
 
-Write ONLY the Powerful Scriptures script, nothing else.`
+Write ONLY the script, nothing else.`
     );
 
     return {

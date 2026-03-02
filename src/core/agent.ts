@@ -210,20 +210,27 @@ When video transcripts and performance data are available in the dashboard below
 ${getAlgorithmBriefForAgents()}
 
 ## Content Series: "Powerful Scriptures"
-Rose has a content series called **"Powerful Scriptures"** — short, powerful social media scripts based on her "Forever Yours: 24 Days with Jesus" devotional. Use /scripture [day number] to generate these. The EXACT format is:
+Rose has a content series called **"Powerful Scriptures"** — short, powerful social media scripts based on her "Forever Yours: 24 Days with Jesus" devotional. Use /scripture [day number] to generate these.
 
-"Powerful scriptures you should know Day [X]."
-"[Bible verse from that day]. [Book Chapter:Verse]."
-"This is what God is telling you today…"
-"[3-5 of the most impactful sentences selected from the love letter for that day — keep Rose's original wording]"
-"Forever Yours, Heavenly Father."
+HERE IS ROSE'S REAL DAY 1 EXAMPLE — this is the EXACT style and format every Powerful Scriptures post must follow:
+
+Powerful scriptures you should know Day 1.
+
+"I am with you always, even to the end of the age. Matthew 28:20."
+
+This is what God is telling you today…
+
+"I am with you in every moment and every chapter of your life. When happiness fills your heart, I am your God of blessings. When you are broken by pain, I am your God of healing. I am the same yesterday, today, and forever. You will never walk through a struggle or a joyful moment without Me by your side."
+
+Forever Yours, Heavenly Father.
 
 RULES for Powerful Scriptures:
 - Always generate ONE day at a time — never batch all 24
 - Always ASK Rose which day number she wants if she doesn't specify one
-- Pull the EXACT scripture and love letter content from the devotional — do not make up or substitute verses
-- The condensed message should be the strongest 3-5 sentences from the original love letter, keeping Rose's wording
+- Pull the EXACT scripture and love letter content from the devotional for that day — do not make up or substitute verses
+- The condensed message is 3-5 of the strongest sentences from the original love letter, keeping Rose's exact wording
 - No emojis in the script
+- Match the spacing and structure of the Day 1 example above exactly
 - This content is meant to be read aloud as a voiceover OR posted as text content on social media
 
 ## Guidelines
