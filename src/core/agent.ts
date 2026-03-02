@@ -621,8 +621,17 @@ ${this.devotionalContent}` : ""}`;
   }
 
   async generateContent(prompt: string): Promise<string> {
-    const response = await this.chat(prompt);
-    return response.text;
+    // Call the API directly — skill-generated content should NOT go through
+    // chat() because Selah's QA review is tuned for Love Notes and will
+    // rewrite structured outputs like Powerful Scriptures posts.
+    const response = await this.client.messages.create({
+      model: this.model,
+      max_tokens: this.maxTokens,
+      system: this.buildSystemPrompt(),
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    return response.content[0].type === "text" ? response.content[0].text : "";
   }
 
   clearHistory(): void {
