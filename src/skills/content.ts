@@ -299,14 +299,11 @@ export const powerfulScriptureSkill: Skill = {
   ],
   async execute(ctx: SkillContext): Promise<SkillResult> {
     const input = ctx.input.trim();
-    const dayNum = parseInt(input, 10);
+    let dayNum = parseInt(input, 10);
 
-    // If no valid day number provided, ask which day
+    // If no valid day number provided, auto-pick a random day (1-24) and generate
     if (!input || isNaN(dayNum) || dayNum < 1 || dayNum > 24) {
-      return {
-        title: "Powerful Scriptures",
-        content: `**Which day would you like?**\n\nThis series is based on the *Forever Yours: 24 Days with Jesus* devotional.\n\nJust type \`/scripture [day number]\` — for example:\n- \`/scripture 1\` — Day 1: Forever With You\n- \`/scripture 5\` — Day 5: Heaven Holds You Close\n- \`/scripture 12\` — Day 12: The Peace You Need\n- \`/scripture 24\` — Day 24: Paid By Love\n\nPick any day from 1 to 24 and I'll write your Powerful Scriptures post for that day.`,
-      };
+      dayNum = Math.floor(Math.random() * 24) + 1;
     }
 
     const response = await ctx.agent.generateContent(

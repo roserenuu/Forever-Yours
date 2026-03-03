@@ -226,7 +226,8 @@ Forever Yours, Heavenly Father.
 
 RULES for Powerful Scriptures:
 - Always generate ONE day at a time — never batch all 24
-- Always ASK Rose which day number she wants if she doesn't specify one
+- If Rose says "powerful scriptures" without a day number, IMMEDIATELY generate one — pick a day and produce the formatted post. Do NOT ask "which scriptures?" or "what are you looking for?" — just give her the content in the exact format above.
+- If Rose specifies a day number, use that day
 - Pull the EXACT scripture and love letter content from the devotional for that day — do not make up or substitute verses
 - The condensed message is 3-5 of the strongest sentences from the original love letter, keeping Rose's exact wording
 - No emojis in the script
@@ -263,6 +264,24 @@ ${this.devotionalContent}` : ""}`;
   }
 
   async chat(userMessage: string): Promise<ChatResponse> {
+    // Auto-route "powerful scriptures" requests (even without /scripture prefix)
+    const isPowerfulScriptureRequest = !userMessage.startsWith("/") &&
+      /\bpowerful\s+scripture/i.test(userMessage);
+    if (isPowerfulScriptureRequest) {
+      console.log("[Eden] Detected Powerful Scriptures request — routing to /scripture...");
+      // Try to extract a day number from the message
+      const dayMatch = userMessage.match(/\b(?:day\s+)?(\d{1,2})\b/);
+      const dayNum = dayMatch ? parseInt(dayMatch[1], 10) : 0;
+      const skill = this.skills.get("scripture");
+      if (skill) {
+        const input = (dayNum >= 1 && dayNum <= 24) ? String(dayNum) : "";
+        const result = await this.executeSkill(skill, input);
+        this.conversationHistory.push({ role: "user", content: userMessage });
+        this.conversationHistory.push({ role: "assistant", content: this.formatSkillResult(result) });
+        return { text: this.formatSkillResult(result) };
+      }
+    }
+
     // Auto-route image/design requests to Iris (even without /design prefix)
     const imageNouns = /\b(image|picture|graphic|carousel|quote graphic|story slide|thumbnail|png|visual|infographic|story graphic|photo|flyer|banner|poster|slide|cover)\b/i;
     const designVerbs = /\b(make|create|design|generate|build|give me|send|draw|need|want|post|whip up|put together|come up with|show me)\b/i;
