@@ -4,6 +4,7 @@ import glob
 import json
 import subprocess
 import threading
+import zipfile
 from flask import Flask, request, jsonify, send_file, render_template
 
 app = Flask(__name__)
@@ -13,7 +14,13 @@ os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 jobs = {}
 
 
-def run_download(job_id, url, format_choice, format_id):
+def safe_title_prefix(title, max_len=20):
+    if not title:
+        return ""
+    return "".join(c for c in title if c not in r'\/:*?"<>|').strip()[:max_len].strip()
+
+
+def run_download(job_id, url, format_choice, format_id, captions):
     job = jobs[job_id]
     out_template = os.path.join(DOWNLOAD_DIR, f"{job_id}.%(ext)s")
 
@@ -26,6 +33,10 @@ def run_download(job_id, url, format_choice, format_id):
     else:
         cmd += ["-f", "bestvideo+bestaudio/best", "--merge-output-format", "mp4"]
 
+    if captions:
+        cmd += ["--write-subs", "--write-auto-subs", "--sub-format", "srt",
+                "--sub-langs", "en.*,en"]
+
     cmd.append(url)
 
     try:
@@ -35,35 +46,50 @@ def run_download(job_id, url, format_choice, format_id):
             job["error"] = result.stderr.strip().split("\n")[-1]
             return
 
-        files = glob.glob(os.path.join(DOWNLOAD_DIR, f"{job_id}.*"))
-        if not files:
+        all_files = glob.glob(os.path.join(DOWNLOAD_DIR, f"{job_id}.*"))
+        if not all_files:
             job["status"] = "error"
             job["error"] = "Download completed but no file was found"
             return
 
-        if format_choice == "audio":
-            target = [f for f in files if f.endswith(".mp3")]
-            chosen = target[0] if target else files[0]
-        else:
-            target = [f for f in files if f.endswith(".mp4")]
-            chosen = target[0] if target else files[0]
+        sub_exts = (".srt", ".vtt", ".ass", ".ssa")
+        sub_files = [f for f in all_files if f.endswith(sub_exts)]
 
-        for f in files:
-            if f != chosen:
+        if format_choice == "audio":
+            media = next((f for f in all_files if f.endswith(".mp3")), all_files[0])
+        else:
+            media = next((f for f in all_files if f.endswith(".mp4")), all_files[0])
+
+        title = job.get("title", "").strip()
+        prefix = safe_title_prefix(title)
+
+        if captions and sub_files:
+            zip_path = os.path.join(DOWNLOAD_DIR, f"{job_id}.zip")
+            media_name = f"{prefix}{os.path.splitext(media)[1]}" if prefix else os.path.basename(media)
+            with zipfile.ZipFile(zip_path, "w") as zf:
+                zf.write(media, media_name)
+                for sf in sub_files:
+                    zf.write(sf, os.path.basename(sf))
+            for f in all_files:
                 try:
                     os.remove(f)
                 except OSError:
                     pass
-
-        job["status"] = "done"
-        job["file"] = chosen
-        ext = os.path.splitext(chosen)[1]
-        title = job.get("title", "").strip()
-        if title:
-            safe_title = "".join(c for c in title if c not in r'\/:*?"<>|').strip()[:20].strip()
-            job["filename"] = f"{safe_title}{ext}" if safe_title else os.path.basename(chosen)
+            job["status"] = "done"
+            job["file"] = zip_path
+            job["filename"] = f"{prefix}.zip" if prefix else f"{job_id}.zip"
         else:
-            job["filename"] = os.path.basename(chosen)
+            for f in all_files:
+                if f != media:
+                    try:
+                        os.remove(f)
+                    except OSError:
+                        pass
+            ext = os.path.splitext(media)[1]
+            job["status"] = "done"
+            job["file"] = media
+            job["filename"] = f"{prefix}{ext}" if prefix else os.path.basename(media)
+
     except subprocess.TimeoutExpired:
         job["status"] = "error"
         job["error"] = "Download timed out (5 min limit)"
@@ -129,6 +155,7 @@ def start_download():
     format_choice = data.get("format", "video")
     format_id = data.get("format_id")
     title = data.get("title", "")
+    captions = bool(data.get("captions", False))
 
     if not url:
         return jsonify({"error": "No URL provided"}), 400
@@ -136,7 +163,7 @@ def start_download():
     job_id = uuid.uuid4().hex[:10]
     jobs[job_id] = {"status": "downloading", "url": url, "title": title}
 
-    thread = threading.Thread(target=run_download, args=(job_id, url, format_choice, format_id))
+    thread = threading.Thread(target=run_download, args=(job_id, url, format_choice, format_id, captions))
     thread.daemon = True
     thread.start()
 

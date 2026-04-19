@@ -141,6 +141,46 @@
     .fetch-btn:active { transform: scale(0.98); }
     .fetch-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
+    .caption-toggle {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 20px;
+      cursor: pointer;
+      width: fit-content;
+    }
+    .caption-toggle input[type="checkbox"] { display: none; }
+    .caption-toggle .toggle-track {
+      width: 34px;
+      height: 18px;
+      border-radius: 9px;
+      background: var(--card-border);
+      position: relative;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .caption-toggle .toggle-thumb {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #fff;
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .caption-toggle input:checked ~ .toggle-track { background: var(--fg); }
+    .caption-toggle input:checked ~ .toggle-track .toggle-thumb { transform: translateX(16px); }
+    .caption-toggle .toggle-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .caption-toggle:has(input:checked) .toggle-label { color: var(--fg); }
+
     .cards { margin-top: 24px; }
 
     .card {
@@ -391,6 +431,11 @@
       </div>
       <button class="fetch-btn" id="goBtn" onclick="go()">Fetch</button>
     </div>
+    <label class="caption-toggle" id="captionToggle">
+      <input type="checkbox" id="captionsCheck">
+      <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      <span class="toggle-label">Include captions (.srt)</span>
+    </label>
 
     <div id="cards" class="cards"></div>
 
@@ -404,6 +449,20 @@
   <script>
     let currentFormat = 'video';
     let cardData = [];
+    let captionsEnabled = false;
+
+    document.getElementById('captionsCheck').addEventListener('change', e => {
+      captionsEnabled = e.target.checked;
+    });
+
+    // Hide captions toggle for audio-only downloads
+    function setFormat(btn) {
+      document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFormat = btn.dataset.format;
+      document.getElementById('captionToggle').style.display =
+        currentFormat === 'audio' ? 'none' : 'flex';
+    }
 
     function setFormat(btn) {
       document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
@@ -609,6 +668,7 @@
             format: currentFormat,
             format_id: c.selectedFormatId,
             title: c.title || '',
+            captions: captionsEnabled,
           }),
         });
         const data = await res.json();
