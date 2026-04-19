@@ -389,6 +389,148 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 48px 0 40px;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--card-border);
+    }
+    .divider span {
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .swap-brand { margin-bottom: 24px; }
+    .swap-brand h2 {
+      font-family: 'Instrument Serif', serif;
+      font-size: 2.6rem;
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .swap-brand h2 em { font-style: italic; color: var(--accent); }
+    .swap-brand p {
+      margin-top: 8px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .swap-url {
+      width: 100%;
+      padding: 14px 18px;
+      border: 1.5px solid var(--card-border);
+      border-radius: var(--radius);
+      background: var(--card);
+      color: var(--fg);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.88rem;
+      outline: none;
+      transition: border-color 0.25s, box-shadow 0.25s;
+      margin-bottom: 6px;
+    }
+    .swap-url:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(232, 93, 42, 0.08);
+    }
+    .swap-url::placeholder { color: var(--muted); }
+
+    .upload-area {
+      border: 1.5px dashed var(--card-border);
+      border-radius: var(--radius);
+      background: var(--card);
+      padding: 32px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      margin-bottom: 6px;
+      position: relative;
+    }
+    .upload-area:hover, .upload-area.drag-over {
+      border-color: var(--accent);
+      background: rgba(232, 93, 42, 0.03);
+    }
+    .upload-area input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+    .upload-icon { color: var(--muted); margin-bottom: 10px; }
+    .upload-icon svg { width: 28px; height: 28px; }
+    .upload-text {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .upload-text span { color: var(--accent); text-decoration: underline; }
+
+    .file-chosen {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border: 1.5px solid var(--card-border);
+      border-radius: 10px;
+      background: var(--card);
+      margin-bottom: 6px;
+    }
+    .file-chosen-name {
+      font-size: 0.78rem;
+      color: var(--fg);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .file-chosen-clear {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 0 2px;
+    }
+    .file-chosen-clear:hover { color: var(--error); }
+
+    .swap-result {
+      margin-top: 16px;
+      padding: 14px 18px;
+      border-radius: var(--radius);
+      font-size: 0.8rem;
+      display: none;
+    }
+    .swap-result.processing {
+      display: block;
+      border: 1.5px solid var(--card-border);
+      background: var(--card);
+      color: var(--accent);
+    }
+    .swap-result.done {
+      display: block;
+      border: 1.5px solid rgba(45,138,78,0.25);
+      background: rgba(45,138,78,0.04);
+      color: var(--success);
+    }
+    .swap-result.error {
+      display: block;
+      border: 1.5px solid rgba(196,61,61,0.2);
+      background: rgba(196,61,61,0.03);
+      color: var(--error);
+    }
+
     .footer {
       margin-top: 48px;
       text-align: center;
@@ -438,6 +580,42 @@
     </label>
 
     <div id="cards" class="cards"></div>
+
+    <div class="divider"><span>or</span></div>
+
+    <div class="swap-brand">
+      <h2>Swap <em>Video</em></h2>
+      <p>Use a video as a caption template — insert yours, keep the captions</p>
+    </div>
+
+    <input class="swap-url" id="swapUrl" type="text" placeholder="Paste original video URL (to pull captions from)...">
+    <p class="hint" style="margin-bottom: 16px;">Captions will be extracted from this URL and embedded into your video.</p>
+
+    <div class="upload-area" id="uploadArea">
+      <input type="file" id="videoFile" accept="video/*" onchange="onFileChosen(this)">
+      <div class="upload-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </div>
+      <div class="upload-text">Drop your video here or <span>browse</span><br>MP4, MOV, MKV, AVI supported</div>
+    </div>
+
+    <div class="file-chosen" id="fileChosen" style="display:none">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/></svg>
+      <span class="file-chosen-name" id="fileChosenName"></span>
+      <button class="file-chosen-clear" onclick="clearFile()" title="Remove">&#x2715;</button>
+    </div>
+
+    <p class="hint" id="swapHint" style="margin-bottom: 16px; display:none">
+      Your video will be returned as an .mp4 with captions embedded as a selectable subtitle track.
+    </p>
+
+    <button class="fetch-btn" id="swapBtn" onclick="doSwap()" style="margin-bottom: 0;">Swap</button>
+
+    <div class="swap-result" id="swapResult"></div>
 
     <div class="footer">
       YouTube &middot; TikTok &middot; Instagram &middot; Twitter/X &middot; Reddit &middot; Facebook<br>
@@ -734,6 +912,99 @@
       }
 
       if (btn) { btn.disabled = false; btn.textContent = 'Download All'; }
+    }
+
+    // ── Swap Video ─────────────────────────────────────────────────────────
+
+    let swapFile = null;
+
+    const uploadArea = document.getElementById('uploadArea');
+    uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
+    uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
+    uploadArea.addEventListener('drop', e => {
+      e.preventDefault();
+      uploadArea.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('video/')) setSwapFile(file);
+    });
+
+    function onFileChosen(input) {
+      if (input.files[0]) setSwapFile(input.files[0]);
+    }
+
+    function setSwapFile(file) {
+      swapFile = file;
+      document.getElementById('fileChosenName').textContent = file.name;
+      document.getElementById('fileChosen').style.display = 'flex';
+      document.getElementById('uploadArea').style.display = 'none';
+      document.getElementById('swapHint').style.display = '';
+    }
+
+    function clearFile() {
+      swapFile = null;
+      document.getElementById('videoFile').value = '';
+      document.getElementById('fileChosen').style.display = 'none';
+      document.getElementById('uploadArea').style.display = '';
+      document.getElementById('swapHint').style.display = 'none';
+    }
+
+    async function doSwap() {
+      const url = document.getElementById('swapUrl').value.trim();
+      const result = document.getElementById('swapResult');
+      const btn = document.getElementById('swapBtn');
+
+      if (!url) { showSwapResult('error', 'Paste a video URL to pull captions from.'); return; }
+      if (!swapFile) { showSwapResult('error', 'Choose your video file first.'); return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Working...';
+      showSwapResult('processing', '<span class="spin"></span> Fetching captions and embedding into your video...');
+
+      const form = new FormData();
+      form.append('url', url);
+      form.append('video', swapFile);
+
+      try {
+        const res = await fetch('/api/swap', { method: 'POST', body: form });
+        const data = await res.json();
+        if (data.error) { showSwapResult('error', esc(data.error)); btn.disabled = false; btn.textContent = 'Swap'; return; }
+        pollSwap(data.job_id, btn);
+      } catch (err) {
+        showSwapResult('error', esc(err.message));
+        btn.disabled = false;
+        btn.textContent = 'Swap';
+      }
+    }
+
+    function pollSwap(jobId, btn) {
+      const iv = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/status/${jobId}`);
+          const data = await res.json();
+          if (data.status === 'done') {
+            clearInterval(iv);
+            showSwapResult('done', `Done! <a href="/api/file/${jobId}" download="${esc(data.filename || 'swapped_captioned.mp4')}" style="color:var(--success);text-decoration:underline;">Download ${esc(data.filename || 'swapped_captioned.mp4')}</a>`);
+            btn.disabled = false;
+            btn.textContent = 'Swap';
+          } else if (data.status === 'error') {
+            clearInterval(iv);
+            showSwapResult('error', esc(friendlyError(data.error || 'Something went wrong')));
+            btn.disabled = false;
+            btn.textContent = 'Swap';
+          }
+        } catch {
+          clearInterval(iv);
+          showSwapResult('error', 'Lost connection to server');
+          btn.disabled = false;
+          btn.textContent = 'Swap';
+        }
+      }, 1500);
+    }
+
+    function showSwapResult(type, html) {
+      const el = document.getElementById('swapResult');
+      el.className = `swap-result ${type}`;
+      el.innerHTML = html;
     }
   </script>
 </body>

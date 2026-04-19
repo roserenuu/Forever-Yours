@@ -9,7 +9,9 @@ from flask import Flask, request, jsonify, send_file, render_template
 
 app = Flask(__name__)
 DOWNLOAD_DIR = os.path.join(os.path.dirname(__file__), "downloads")
+UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 jobs = {}
 
@@ -96,6 +98,100 @@ def run_download(job_id, url, format_choice, format_id, captions):
     except Exception as e:
         job["status"] = "error"
         job["error"] = str(e)
+
+
+def run_swap(job_id, video_path, url):
+    job = jobs[job_id]
+    sub_prefix = os.path.join(DOWNLOAD_DIR, f"{job_id}_cap")
+    sub_template = f"{sub_prefix}.%(ext)s"
+
+    cmd = [
+        "yt-dlp", "--no-playlist", "--skip-download",
+        "--write-subs", "--write-auto-subs",
+        "--sub-format", "srt",
+        "--sub-langs", "en.*,en",
+        "-o", sub_template,
+        url,
+    ]
+
+    try:
+        subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+
+        sub_exts = (".srt", ".vtt", ".ass")
+        sub_files = sorted(
+            [f for f in glob.glob(f"{sub_prefix}.*") if f.endswith(sub_exts)],
+            key=lambda f: (0 if f.endswith(".srt") else 1)
+        )
+
+        if not sub_files:
+            job["status"] = "error"
+            job["error"] = "No captions found for this URL"
+            try:
+                os.remove(video_path)
+            except OSError:
+                pass
+            return
+
+        sub_file = sub_files[0]
+        out_path = os.path.join(DOWNLOAD_DIR, f"{job_id}_swapped.mp4")
+
+        ffmpeg_cmd = [
+            "ffmpeg", "-y",
+            "-i", video_path,
+            "-i", sub_file,
+            "-c:v", "copy",
+            "-c:a", "copy",
+            "-c:s", "mov_text",
+            "-metadata:s:s:0", "language=eng",
+            out_path,
+        ]
+        result = subprocess.run(ffmpeg_cmd, capture_output=True, text=True, timeout=300)
+
+        for f in [video_path] + sub_files:
+            try:
+                os.remove(f)
+            except OSError:
+                pass
+
+        if result.returncode != 0:
+            job["status"] = "error"
+            job["error"] = "ffmpeg failed to embed captions — make sure your video is a valid mp4/mov"
+            return
+
+        job["status"] = "done"
+        job["file"] = out_path
+        job["filename"] = "swapped_captioned.mp4"
+
+    except subprocess.TimeoutExpired:
+        job["status"] = "error"
+        job["error"] = "Operation timed out"
+    except Exception as e:
+        job["status"] = "error"
+        job["error"] = str(e)
+
+
+@app.route("/api/swap", methods=["POST"])
+def start_swap():
+    url = request.form.get("url", "").strip()
+    video_file = request.files.get("video")
+
+    if not url:
+        return jsonify({"error": "No URL provided"}), 400
+    if not video_file or not video_file.filename:
+        return jsonify({"error": "No video file provided"}), 400
+
+    job_id = uuid.uuid4().hex[:10]
+    ext = os.path.splitext(video_file.filename)[1] or ".mp4"
+    video_path = os.path.join(UPLOAD_DIR, f"{job_id}{ext}")
+    video_file.save(video_path)
+
+    jobs[job_id] = {"status": "processing", "url": url, "title": ""}
+
+    thread = threading.Thread(target=run_swap, args=(job_id, video_path, url))
+    thread.daemon = True
+    thread.start()
+
+    return jsonify({"job_id": job_id})
 
 
 @app.route("/")
