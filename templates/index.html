@@ -617,6 +617,49 @@
 
     <div class="swap-result" id="swapResult"></div>
 
+    <div class="divider"><span>or</span></div>
+
+    <div class="swap-brand">
+      <h2>Clean <em>Video</em></h2>
+      <p>Remove captions from a local video file</p>
+    </div>
+
+    <div class="pill-group" style="margin-bottom: 16px; display: inline-flex;">
+      <button class="pill active" id="cleanTrackPill" onclick="setCleanMode('tracks', this)">Embedded tracks</button>
+      <button class="pill" id="cleanPaintPill" onclick="setCleanMode('paint', this)">AI paint over text</button>
+    </div>
+
+    <p class="hint" id="cleanHintTracks" style="margin-bottom: 16px;">
+      Removes subtitle tracks toggled on/off in your player — fast, lossless copy.
+    </p>
+    <p class="hint" id="cleanHintPaint" style="margin-bottom: 16px; display: none;">
+      Detects and blends over burned-in text &amp; emojis frame by frame using AI. Takes a few minutes depending on video length.
+    </p>
+
+    <div class="upload-area" id="cleanUploadArea">
+      <input type="file" id="cleanFile" accept="video/*" onchange="onCleanFileChosen(this)">
+      <div class="upload-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </div>
+      <div class="upload-text">Drop your video here or <span>browse</span></div>
+    </div>
+
+    <div class="file-chosen" id="cleanFileChosen" style="display:none">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/></svg>
+      <span class="file-chosen-name" id="cleanFileChosenName"></span>
+      <button class="file-chosen-clear" onclick="clearCleanFile()" title="Remove">&#x2715;</button>
+    </div>
+
+    <div class="swap-result" id="cleanProgress" style="display:none; margin-bottom: 8px;"></div>
+
+    <button class="fetch-btn" id="cleanBtn" onclick="doClean()" style="margin-bottom: 0;">Clean</button>
+
+    <div class="swap-result" id="cleanResult"></div>
+
     <div class="footer">
       YouTube &middot; TikTok &middot; Instagram &middot; Twitter/X &middot; Reddit &middot; Facebook<br>
       Vimeo &middot; Twitch &middot; Dailymotion &middot; SoundCloud &middot; Loom &middot; Streamable<br>
@@ -1003,6 +1046,117 @@
 
     function showSwapResult(type, html) {
       const el = document.getElementById('swapResult');
+      el.className = `swap-result ${type}`;
+      el.innerHTML = html;
+    }
+
+    // ── Clean Video ─────────────────────────────────────────────────────────
+
+    let cleanFile = null;
+    let cleanMode = 'tracks';
+
+    function setCleanMode(mode, btn) {
+      cleanMode = mode;
+      document.querySelectorAll('#cleanTrackPill, #cleanPaintPill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('cleanHintTracks').style.display = mode === 'tracks' ? '' : 'none';
+      document.getElementById('cleanHintPaint').style.display  = mode === 'paint'  ? '' : 'none';
+    }
+
+    const cleanUploadArea = document.getElementById('cleanUploadArea');
+    cleanUploadArea.addEventListener('dragover', e => { e.preventDefault(); cleanUploadArea.classList.add('drag-over'); });
+    cleanUploadArea.addEventListener('dragleave', () => cleanUploadArea.classList.remove('drag-over'));
+    cleanUploadArea.addEventListener('drop', e => {
+      e.preventDefault();
+      cleanUploadArea.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('video/')) setCleanFile(file);
+    });
+
+    function onCleanFileChosen(input) {
+      if (input.files[0]) setCleanFile(input.files[0]);
+    }
+
+    function setCleanFile(file) {
+      cleanFile = file;
+      document.getElementById('cleanFileChosenName').textContent = file.name;
+      document.getElementById('cleanFileChosen').style.display = 'flex';
+      document.getElementById('cleanUploadArea').style.display = 'none';
+    }
+
+    function clearCleanFile() {
+      cleanFile = null;
+      document.getElementById('cleanFile').value = '';
+      document.getElementById('cleanFileChosen').style.display = 'none';
+      document.getElementById('cleanUploadArea').style.display = '';
+    }
+
+    async function doClean() {
+      if (!cleanFile) { showCleanResult('error', 'Choose a video file first.'); return; }
+
+      const btn = document.getElementById('cleanBtn');
+      btn.disabled = true;
+      btn.textContent = 'Working...';
+
+      const endpoint = cleanMode === 'paint' ? '/api/ai-paint' : '/api/clean-tracks';
+      const msg = cleanMode === 'paint'
+        ? '<span class="spin"></span> AI is scanning and painting over text — this may take a few minutes...'
+        : '<span class="spin"></span> Removing embedded subtitle tracks...';
+      showCleanResult('processing', msg);
+      document.getElementById('cleanProgress').style.display = 'none';
+
+      const form = new FormData();
+      form.append('video', cleanFile);
+
+      try {
+        const res = await fetch(endpoint, { method: 'POST', body: form });
+        const data = await res.json();
+        if (data.error) { showCleanResult('error', esc(data.error)); btn.disabled = false; btn.textContent = 'Clean'; return; }
+        pollClean(data.job_id, btn);
+      } catch (err) {
+        showCleanResult('error', esc(err.message));
+        btn.disabled = false;
+        btn.textContent = 'Clean';
+      }
+    }
+
+    function pollClean(jobId, btn) {
+      const iv = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/status/${jobId}`);
+          const data = await res.json();
+
+          if (cleanMode === 'paint' && data.progress != null && data.status === 'processing') {
+            const prog = document.getElementById('cleanProgress');
+            prog.className = 'swap-result processing';
+            prog.style.display = 'block';
+            prog.innerHTML = `<span class="spin"></span> Processing frames: ${data.progress}%`;
+          }
+
+          if (data.status === 'done') {
+            clearInterval(iv);
+            document.getElementById('cleanProgress').style.display = 'none';
+            showCleanResult('done', `Done! <a href="/api/file/${jobId}" download="${esc(data.filename || 'cleaned.mp4')}" style="color:var(--success);text-decoration:underline;">Download ${esc(data.filename || 'cleaned.mp4')}</a>`);
+            btn.disabled = false;
+            btn.textContent = 'Clean';
+          } else if (data.status === 'error') {
+            clearInterval(iv);
+            document.getElementById('cleanProgress').style.display = 'none';
+            showCleanResult('error', esc(data.error || 'Something went wrong'));
+            btn.disabled = false;
+            btn.textContent = 'Clean';
+          }
+        } catch {
+          clearInterval(iv);
+          showCleanResult('error', 'Lost connection to server');
+          btn.disabled = false;
+          btn.textContent = 'Clean';
+        }
+      }, 1500);
+    }
+
+    function showCleanResult(type, html) {
+      const el = document.getElementById('cleanResult');
       el.className = `swap-result ${type}`;
       el.innerHTML = html;
     }

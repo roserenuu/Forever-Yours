@@ -35,9 +35,11 @@ if [ ! -d "venv" ]; then
     echo "Setting up virtual environment..."
     python3 -m venv venv
     source venv/bin/activate
-    pip install -q flask yt-dlp
+    pip install -q flask yt-dlp opencv-python easyocr
 else
     source venv/bin/activate
+    # Install any newly added deps that may be missing
+    pip install -q flask yt-dlp opencv-python easyocr
 fi
 
 PORT="${PORT:-8899}"

@@ -5,6 +5,7 @@ import json
 import subprocess
 import threading
 import zipfile
+import shutil
 from flask import Flask, request, jsonify, send_file, render_template
 
 app = Flask(__name__)
@@ -170,6 +171,154 @@ def run_swap(job_id, video_path, url):
         job["error"] = str(e)
 
 
+def run_clean_tracks(job_id, video_path):
+    job = jobs[job_id]
+    out_path = os.path.join(DOWNLOAD_DIR, f"{job_id}_clean.mp4")
+    cmd = [
+        "ffmpeg", "-y", "-i", video_path,
+        "-map", "0:v", "-map", "0:a?",
+        "-c", "copy", out_path,
+    ]
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+        try:
+            os.remove(video_path)
+        except OSError:
+            pass
+        if result.returncode != 0:
+            job["status"] = "error"
+            job["error"] = "ffmpeg failed — make sure the file is a valid video"
+            return
+        job["status"] = "done"
+        job["file"] = out_path
+        job["filename"] = "clean_no_subtitles.mp4"
+    except subprocess.TimeoutExpired:
+        job["status"] = "error"
+        job["error"] = "Processing timed out"
+    except Exception as e:
+        job["status"] = "error"
+        job["error"] = str(e)
+
+
+def run_ai_paint(job_id, video_path):
+    job = jobs[job_id]
+    frames_dir = os.path.join(DOWNLOAD_DIR, f"{job_id}_frames")
+    out_path = os.path.join(DOWNLOAD_DIR, f"{job_id}_painted.mp4")
+    os.makedirs(frames_dir, exist_ok=True)
+
+    try:
+        import cv2
+        import easyocr
+        import numpy as np
+
+        # Get frame rate
+        probe = subprocess.run(
+            ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_streams", video_path],
+            capture_output=True, text=True, timeout=30,
+        )
+        fps = "30"
+        for stream in json.loads(probe.stdout).get("streams", []):
+            if stream.get("codec_type") == "video":
+                r = stream.get("r_frame_rate", "30/1")
+                num, den = r.split("/")
+                fps = str(round(int(num) / max(int(den), 1), 3))
+                break
+
+        # Extract frames
+        subprocess.run(
+            ["ffmpeg", "-y", "-i", video_path, f"{frames_dir}/%06d.png"],
+            capture_output=True, check=True, timeout=300,
+        )
+
+        reader = easyocr.Reader(["en"], gpu=False, verbose=False)
+        frame_files = sorted(glob.glob(os.path.join(frames_dir, "*.png")))
+        total = len(frame_files)
+
+        for i, frame_path in enumerate(frame_files):
+            frame = cv2.imread(frame_path)
+            if frame is None:
+                continue
+            results = reader.readtext(frame)
+            mask = np.zeros(frame.shape[:2], dtype=np.uint8)
+            for (bbox, _text, prob) in results:
+                if prob > 0.25:
+                    pts = np.array(bbox, dtype=np.int32)
+                    pad = 8
+                    x1 = max(0, int(pts[:, 0].min()) - pad)
+                    y1 = max(0, int(pts[:, 1].min()) - pad)
+                    x2 = min(frame.shape[1], int(pts[:, 0].max()) + pad)
+                    y2 = min(frame.shape[0], int(pts[:, 1].max()) + pad)
+                    mask[y1:y2, x1:x2] = 255
+            if mask.max() > 0:
+                frame = cv2.inpaint(frame, mask, 5, cv2.INPAINT_TELEA)
+                cv2.imwrite(frame_path, frame)
+            job["progress"] = int((i + 1) / total * 100)
+
+        # Reassemble with original audio
+        subprocess.run([
+            "ffmpeg", "-y",
+            "-framerate", fps,
+            "-i", f"{frames_dir}/%06d.png",
+            "-i", video_path,
+            "-map", "0:v", "-map", "1:a?",
+            "-c:v", "libx264", "-c:a", "copy",
+            "-pix_fmt", "yuv420p",
+            out_path,
+        ], capture_output=True, check=True, timeout=600)
+
+        job["status"] = "done"
+        job["file"] = out_path
+        job["filename"] = "ai_cleaned.mp4"
+
+    except ImportError:
+        job["status"] = "error"
+        job["error"] = "AI libraries not installed — re-run reclip.sh to set up"
+    except subprocess.CalledProcessError:
+        job["status"] = "error"
+        job["error"] = "Processing failed — check that ffmpeg is installed"
+    except Exception as e:
+        job["status"] = "error"
+        job["error"] = str(e)
+    finally:
+        shutil.rmtree(frames_dir, ignore_errors=True)
+        try:
+            os.remove(video_path)
+        except OSError:
+            pass
+
+
+@app.route("/api/clean-tracks", methods=["POST"])
+def start_clean_tracks():
+    video_file = request.files.get("video")
+    if not video_file or not video_file.filename:
+        return jsonify({"error": "No video file provided"}), 400
+    job_id = uuid.uuid4().hex[:10]
+    ext = os.path.splitext(video_file.filename)[1] or ".mp4"
+    video_path = os.path.join(UPLOAD_DIR, f"{job_id}{ext}")
+    video_file.save(video_path)
+    jobs[job_id] = {"status": "processing", "title": ""}
+    thread = threading.Thread(target=run_clean_tracks, args=(job_id, video_path))
+    thread.daemon = True
+    thread.start()
+    return jsonify({"job_id": job_id})
+
+
+@app.route("/api/ai-paint", methods=["POST"])
+def start_ai_paint():
+    video_file = request.files.get("video")
+    if not video_file or not video_file.filename:
+        return jsonify({"error": "No video file provided"}), 400
+    job_id = uuid.uuid4().hex[:10]
+    ext = os.path.splitext(video_file.filename)[1] or ".mp4"
+    video_path = os.path.join(UPLOAD_DIR, f"{job_id}{ext}")
+    video_file.save(video_path)
+    jobs[job_id] = {"status": "processing", "title": "", "progress": 0}
+    thread = threading.Thread(target=run_ai_paint, args=(job_id, video_path))
+    thread.daemon = True
+    thread.start()
+    return jsonify({"job_id": job_id})
+
+
 @app.route("/api/swap", methods=["POST"])
 def start_swap():
     url = request.form.get("url", "").strip()
@@ -275,6 +424,7 @@ def check_status(job_id):
         "status": job["status"],
         "error": job.get("error"),
         "filename": job.get("filename"),
+        "progress": job.get("progress"),
     })
 
 
