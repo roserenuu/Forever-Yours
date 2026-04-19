@@ -288,14 +288,48 @@ def run_ai_paint(job_id, video_path):
 
 
 @app.route("/api/clean-tracks", methods=["POST"])
-def start_clean_tracks():
+def _save_video_input(job_id):
+    """Accepts either an uploaded `video` file or a `url` form field.
+    Returns (video_path, error). If URL is given, downloads via yt-dlp first."""
     video_file = request.files.get("video")
-    if not video_file or not video_file.filename:
-        return jsonify({"error": "No video file provided"}), 400
+    url = (request.form.get("url") or "").strip()
+
+    if video_file and video_file.filename:
+        ext = os.path.splitext(video_file.filename)[1] or ".mp4"
+        video_path = os.path.join(UPLOAD_DIR, f"{job_id}{ext}")
+        video_file.save(video_path)
+        return video_path, None
+
+    if url:
+        out_template = os.path.join(UPLOAD_DIR, f"{job_id}.%(ext)s")
+        cmd = [
+            "yt-dlp", "--no-playlist",
+            "-f", "bestvideo+bestaudio/best",
+            "--merge-output-format", "mp4",
+            "-o", out_template, url,
+        ]
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+            if result.returncode != 0:
+                return None, result.stderr.strip().split("\n")[-1]
+            files = glob.glob(os.path.join(UPLOAD_DIR, f"{job_id}.*"))
+            mp4 = next((f for f in files if f.endswith(".mp4")), files[0] if files else None)
+            if not mp4:
+                return None, "Download completed but no file was found"
+            return mp4, None
+        except subprocess.TimeoutExpired:
+            return None, "Download timed out"
+        except Exception as e:
+            return None, str(e)
+
+    return None, "Provide a video file or a URL"
+
+
+def start_clean_tracks():
     job_id = uuid.uuid4().hex[:10]
-    ext = os.path.splitext(video_file.filename)[1] or ".mp4"
-    video_path = os.path.join(UPLOAD_DIR, f"{job_id}{ext}")
-    video_file.save(video_path)
+    video_path, err = _save_video_input(job_id)
+    if err:
+        return jsonify({"error": err}), 400
     jobs[job_id] = {"status": "processing", "title": ""}
     thread = threading.Thread(target=run_clean_tracks, args=(job_id, video_path))
     thread.daemon = True
@@ -305,13 +339,10 @@ def start_clean_tracks():
 
 @app.route("/api/ai-paint", methods=["POST"])
 def start_ai_paint():
-    video_file = request.files.get("video")
-    if not video_file or not video_file.filename:
-        return jsonify({"error": "No video file provided"}), 400
     job_id = uuid.uuid4().hex[:10]
-    ext = os.path.splitext(video_file.filename)[1] or ".mp4"
-    video_path = os.path.join(UPLOAD_DIR, f"{job_id}{ext}")
-    video_file.save(video_path)
+    video_path, err = _save_video_input(job_id)
+    if err:
+        return jsonify({"error": err}), 400
     jobs[job_id] = {"status": "processing", "title": "", "progress": 0}
     thread = threading.Thread(target=run_ai_paint, args=(job_id, video_path))
     thread.daemon = True

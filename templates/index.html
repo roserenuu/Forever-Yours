@@ -676,6 +676,9 @@
       Detects and blends over burned-in text &amp; emojis frame by frame using AI. Takes a few minutes depending on video length.
     </p>
 
+    <input class="swap-url" id="cleanUrl" type="text" placeholder="Paste video URL to download & clean...">
+    <p class="hint" style="margin-bottom: 12px;">Or upload a local file below — use either, not both.</p>
+
     <div class="upload-area" id="cleanUploadArea">
       <input type="file" id="cleanFile" accept="video/*" onchange="onCleanFileChosen(this)">
       <div class="upload-icon">
@@ -1140,21 +1143,33 @@
     }
 
     async function doClean() {
-      if (!cleanFile) { showCleanResult('error', 'Choose a video file first.'); return; }
+      const cleanUrl = document.getElementById('cleanUrl').value.trim();
+      if (!cleanFile && !cleanUrl) {
+        showCleanResult('error', 'Paste a URL or choose a video file first.');
+        return;
+      }
 
       const btn = document.getElementById('cleanBtn');
       btn.disabled = true;
       btn.textContent = 'Working...';
 
       const endpoint = cleanMode === 'paint' ? '/api/ai-paint' : '/api/clean-tracks';
-      const msg = cleanMode === 'paint'
-        ? '<span class="spin"></span> AI is scanning and painting over text — this may take a few minutes...'
-        : '<span class="spin"></span> Removing embedded subtitle tracks...';
+      let msg;
+      if (cleanUrl && !cleanFile) {
+        msg = cleanMode === 'paint'
+          ? '<span class="spin"></span> Downloading and painting over text — may take a few minutes...'
+          : '<span class="spin"></span> Downloading and removing subtitle tracks...';
+      } else {
+        msg = cleanMode === 'paint'
+          ? '<span class="spin"></span> AI is scanning and painting over text — this may take a few minutes...'
+          : '<span class="spin"></span> Removing embedded subtitle tracks...';
+      }
       showCleanResult('processing', msg);
       document.getElementById('cleanProgress').style.display = 'none';
 
       const form = new FormData();
-      form.append('video', cleanFile);
+      if (cleanFile) form.append('video', cleanFile);
+      if (cleanUrl) form.append('url', cleanUrl);
 
       try {
         const res = await fetch(endpoint, { method: 'POST', body: form });
