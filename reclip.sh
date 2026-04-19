@@ -35,11 +35,16 @@ if [ ! -d "venv" ]; then
     echo "Setting up virtual environment..."
     python3 -m venv venv
     source venv/bin/activate
-    pip install -q flask yt-dlp opencv-python easyocr
+    pip install -q flask yt-dlp
 else
     source venv/bin/activate
-    # Install any newly added deps that may be missing
-    pip install -q flask yt-dlp opencv-python easyocr
+    pip install -q flask yt-dlp
+fi
+
+# Optional: AI paint dependencies. Don't fail the whole script if they can't install.
+if [ "$1" = "--with-ai" ] || [ "$INSTALL_AI" = "1" ]; then
+    echo "Installing AI paint dependencies (this may take a while)..."
+    pip install opencv-python easyocr || echo "AI paint deps failed to install — other features will still work."
 fi
 
 PORT="${PORT:-8899}"
