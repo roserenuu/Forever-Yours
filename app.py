@@ -287,7 +287,6 @@ def run_ai_paint(job_id, video_path):
             pass
 
 
-@app.route("/api/clean-tracks", methods=["POST"])
 def _save_video_input(job_id):
     """Accepts either an uploaded `video` file or a `url` form field.
     Returns (video_path, error). If URL is given, downloads via yt-dlp first."""
@@ -325,6 +324,7 @@ def _save_video_input(job_id):
     return None, "Provide a video file or a URL"
 
 
+@app.route("/api/clean-tracks", methods=["POST"])
 def start_clean_tracks():
     job_id = uuid.uuid4().hex[:10]
     video_path, err = _save_video_input(job_id)
