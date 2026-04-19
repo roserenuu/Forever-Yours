@@ -389,6 +389,39 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    .tab-nav {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 32px;
+      border: 1.5px solid var(--card-border);
+      border-radius: 12px;
+      padding: 4px;
+      background: var(--card);
+    }
+    .tab-nav button {
+      flex: 1;
+      padding: 10px 14px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.2s;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+    .tab-nav button:hover { color: var(--fg); }
+    .tab-nav button.active {
+      background: var(--fg);
+      color: var(--bg);
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+
     .divider {
       display: flex;
       align-items: center;
@@ -563,6 +596,13 @@
       <p>Free media downloader</p>
     </div>
 
+    <div class="tab-nav">
+      <button class="active" data-tab="download" onclick="showTab('download', this)">Download</button>
+      <button data-tab="swap" onclick="showTab('swap', this)">Swap Video</button>
+      <button data-tab="clean" onclick="showTab('clean', this)">Clean Video</button>
+    </div>
+
+    <div class="tab-panel active" id="tab-download">
     <textarea id="urls" placeholder="Paste one or more URLs..." rows="2"></textarea>
     <p class="hint">Multiple links? Separate with spaces, commas, or newlines.</p>
 
@@ -580,9 +620,9 @@
     </label>
 
     <div id="cards" class="cards"></div>
+    </div><!-- /tab-download -->
 
-    <div class="divider"><span>or</span></div>
-
+    <div class="tab-panel" id="tab-swap">
     <div class="swap-brand">
       <h2>Swap <em>Video</em></h2>
       <p>Use a video as a caption template — insert yours, keep the captions</p>
@@ -616,9 +656,9 @@
     <button class="fetch-btn" id="swapBtn" onclick="doSwap()" style="margin-bottom: 0;">Swap</button>
 
     <div class="swap-result" id="swapResult"></div>
+    </div><!-- /tab-swap -->
 
-    <div class="divider"><span>or</span></div>
-
+    <div class="tab-panel" id="tab-clean">
     <div class="swap-brand">
       <h2>Clean <em>Video</em></h2>
       <p>Remove captions from a local video file</p>
@@ -659,6 +699,7 @@
     <button class="fetch-btn" id="cleanBtn" onclick="doClean()" style="margin-bottom: 0;">Clean</button>
 
     <div class="swap-result" id="cleanResult"></div>
+    </div><!-- /tab-clean -->
 
     <div class="footer">
       YouTube &middot; TikTok &middot; Instagram &middot; Twitter/X &middot; Reddit &middot; Facebook<br>
@@ -668,6 +709,13 @@
   </div>
 
   <script>
+    function showTab(name, btn) {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-nav button').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + name).classList.add('active');
+      btn.classList.add('active');
+    }
+
     let currentFormat = 'video';
     let cardData = [];
     let captionsEnabled = false;
