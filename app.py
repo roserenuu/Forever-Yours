@@ -211,7 +211,7 @@ def run_ai_paint(job_id, video_path):
         import pytesseract
         import numpy as np
 
-        # Get frame rate
+        job["message"] = "Analyzing video..."
         probe = subprocess.run(
             ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_streams", video_path],
             capture_output=True, text=True, timeout=30,
@@ -224,7 +224,7 @@ def run_ai_paint(job_id, video_path):
                 fps = str(round(int(num) / max(int(den), 1), 3))
                 break
 
-        # Extract frames
+        job["message"] = "Extracting frames (may take a minute)..."
         subprocess.run(
             ["ffmpeg", "-y", "-i", video_path, f"{frames_dir}/%06d.png"],
             capture_output=True, check=True, timeout=300,
@@ -258,7 +258,9 @@ def run_ai_paint(job_id, video_path):
             if mask.max() > 0:
                 frame = cv2.inpaint(frame, mask, 5, cv2.INPAINT_TELEA)
                 cv2.imwrite(frame_path, frame)
-            job["progress"] = int((i + 1) / total * 100)
+            pct = int((i + 1) / total * 100)
+            job["progress"] = pct
+            job["message"] = f"Painting frames: {pct}%"
 
         # Reassemble with original audio
         subprocess.run([
@@ -465,6 +467,7 @@ def check_status(job_id):
         "error": job.get("error"),
         "filename": job.get("filename"),
         "progress": job.get("progress"),
+        "message": job.get("message"),
     })
 
 

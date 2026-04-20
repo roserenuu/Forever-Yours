@@ -1189,11 +1189,12 @@
           const res = await fetch(`/api/status/${jobId}`);
           const data = await res.json();
 
-          if (cleanMode === 'paint' && data.progress != null && data.status === 'processing') {
+          if (cleanMode === 'paint' && data.status === 'processing') {
             const prog = document.getElementById('cleanProgress');
             prog.className = 'swap-result processing';
             prog.style.display = 'block';
-            prog.innerHTML = `<span class="spin"></span> Processing frames: ${data.progress}%`;
+            const label = data.message || (data.progress ? `Painting frames: ${data.progress}%` : 'Working...');
+            prog.innerHTML = `<span class="spin"></span> ${esc(label)}`;
           }
 
           if (data.status === 'done') {
