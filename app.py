@@ -176,8 +176,8 @@ def run_clean_tracks(job_id, video_path):
     out_path = os.path.join(DOWNLOAD_DIR, f"{job_id}_clean.mp4")
     cmd = [
         "ffmpeg", "-y", "-i", video_path,
-        "-map", "0:v", "-map", "0:a?",
-        "-c", "copy", out_path,
+        "-c", "copy", "-sn",
+        out_path,
     ]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
@@ -208,7 +208,7 @@ def run_ai_paint(job_id, video_path):
 
     try:
         import cv2
-        import easyocr
+        import pytesseract
         import numpy as np
 
         # Get frame rate
@@ -230,7 +230,6 @@ def run_ai_paint(job_id, video_path):
             capture_output=True, check=True, timeout=300,
         )
 
-        reader = easyocr.Reader(["en"], gpu=False, verbose=False)
         frame_files = sorted(glob.glob(os.path.join(frames_dir, "*.png")))
         total = len(frame_files)
 
@@ -238,16 +237,23 @@ def run_ai_paint(job_id, video_path):
             frame = cv2.imread(frame_path)
             if frame is None:
                 continue
-            results = reader.readtext(frame)
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            data = pytesseract.image_to_data(gray, output_type=pytesseract.Output.DICT)
             mask = np.zeros(frame.shape[:2], dtype=np.uint8)
-            for (bbox, _text, prob) in results:
-                if prob > 0.25:
-                    pts = np.array(bbox, dtype=np.int32)
+            n = len(data.get("text", []))
+            for k in range(n):
+                try:
+                    conf = int(float(data["conf"][k]))
+                except (ValueError, TypeError):
+                    conf = -1
+                if conf > 30 and data["text"][k].strip():
+                    x, y = data["left"][k], data["top"][k]
+                    w, h = data["width"][k], data["height"][k]
                     pad = 8
-                    x1 = max(0, int(pts[:, 0].min()) - pad)
-                    y1 = max(0, int(pts[:, 1].min()) - pad)
-                    x2 = min(frame.shape[1], int(pts[:, 0].max()) + pad)
-                    y2 = min(frame.shape[0], int(pts[:, 1].max()) + pad)
+                    x1 = max(0, x - pad)
+                    y1 = max(0, y - pad)
+                    x2 = min(frame.shape[1], x + w + pad)
+                    y2 = min(frame.shape[0], y + h + pad)
                     mask[y1:y2, x1:x2] = 255
             if mask.max() > 0:
                 frame = cv2.inpaint(frame, mask, 5, cv2.INPAINT_TELEA)
@@ -272,13 +278,16 @@ def run_ai_paint(job_id, video_path):
 
     except ImportError:
         job["status"] = "error"
-        job["error"] = "AI libraries not installed — re-run reclip.sh to set up"
+        job["error"] = "Python libraries missing — re-run ./reclip.sh to install"
     except subprocess.CalledProcessError:
         job["status"] = "error"
         job["error"] = "Processing failed — check that ffmpeg is installed"
     except Exception as e:
+        msg = str(e)
+        if "tesseract" in msg.lower() and "not" in msg.lower():
+            msg = "Tesseract OCR not installed. Run: brew install tesseract"
         job["status"] = "error"
-        job["error"] = str(e)
+        job["error"] = msg
     finally:
         shutil.rmtree(frames_dir, ignore_errors=True)
         try:
@@ -303,7 +312,7 @@ def _save_video_input(job_id):
         out_template = os.path.join(UPLOAD_DIR, f"{job_id}.%(ext)s")
         cmd = [
             "yt-dlp", "--no-playlist",
-            "-f", "bestvideo+bestaudio/best",
+            "-f", "bv*+ba/b[vcodec!=none]/best",
             "--merge-output-format", "mp4",
             "-o", out_template, url,
         ]

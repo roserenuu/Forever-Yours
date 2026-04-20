@@ -35,16 +35,24 @@ if [ ! -d "venv" ]; then
     echo "Setting up virtual environment..."
     python3 -m venv venv
     source venv/bin/activate
-    pip install -q flask yt-dlp
+    pip install -q flask yt-dlp opencv-python pytesseract
 else
     source venv/bin/activate
-    pip install -q flask yt-dlp
+    pip install -q flask yt-dlp opencv-python pytesseract
 fi
 
-# Optional: AI paint dependencies. Don't fail the whole script if they can't install.
-if [ "$1" = "--with-ai" ] || [ "$INSTALL_AI" = "1" ]; then
-    echo "Installing AI paint dependencies (this may take a while)..."
-    pip install opencv-python easyocr || echo "AI paint deps failed to install — other features will still work."
+# Tesseract OCR is used by the AI paint feature. Try to make sure it's installed.
+if ! command -v tesseract &> /dev/null; then
+    echo ""
+    echo "Note: 'tesseract' is not installed — the AI paint feature needs it."
+    if command -v brew &> /dev/null; then
+        echo "Installing tesseract via Homebrew..."
+        brew install -q tesseract || echo "Tesseract install failed — AI paint won't work until it's installed."
+    elif command -v apt &> /dev/null; then
+        echo "Install with:  sudo apt install tesseract-ocr"
+    else
+        echo "Install tesseract manually for AI paint support."
+    fi
 fi
 
 PORT="${PORT:-8899}"
